@@ -1,40 +1,23 @@
-CURDIR=$(shell pwd)
-BINDIR=${CURDIR}/bin
-GOVER=$(shell go version | perl -nle '/(go\d\S+)/; print $$1;')
-SMARTIMPORTS=${BINDIR}/smartimports_${GOVER}
-LINTVER=v1.51.1
-LINTBIN=${BINDIR}/lint_${GOVER}_${LINTVER}
-PACKAGE=route256/loms/cmd/app
+curdir=$(shell pwd)
+docker_bin := $(shell command -v docker 2> /dev/null)
+app := route256/loms
 
-all: format build test lint
+check: fieldaligment-fix gofumpt lint build test
 
-build: bindir
-	go build -o ${BINDIR}/app ${PACKAGE}
+build:
+	$(docker_bin) build -t $(app) .
 
 test:
-	go test ./...
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) go test -v -race ./...
 
-run:
-	go run ${PACKAGE}
+lint:
+	$(docker_bin) run --rm -v $(curdir):/app -w /app golangci/golangci-lint:latest golangci-lint run
 
-lint: install-lint
-	${LINTBIN} run
+gofumpt:
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) gofumpt -l -w .
 
-precommit: format build test lint
-	echo "OK"
+fieldaligment-fix:
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) fieldalignment -fix ./... || true
 
-bindir:
-	mkdir -p ${BINDIR}
 
-format: install-smartimports
-	${SMARTIMPORTS} -exclude internal/mocks
 
-install-lint: bindir
-	test -f ${LINTBIN} || \
-		(GOBIN=${BINDIR} go install github.com/golangci/golangci-lint/cmd/golangci-lint@${LINTVER} && \
-		mv ${BINDIR}/golangci-lint ${LINTBIN})
-
-install-smartimports: bindir
-	test -f ${SMARTIMPORTS} || \
-		(GOBIN=${BINDIR} go install github.com/pav5000/smartimports/cmd/smartimports@latest && \
-		mv ${BINDIR}/smartimports ${SMARTIMPORTS})

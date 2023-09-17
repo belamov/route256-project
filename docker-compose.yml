@@ -7,11 +7,15 @@ services:
       - "8082:8080"
     depends_on:
       - loms
+    command: /cart
+
   loms:
     image: loms
     build: ./loms/
     ports:
       - "8083:8080"
+    command: /loms
+
   # notification:
   #   image: notification
   #   build: ./notification
