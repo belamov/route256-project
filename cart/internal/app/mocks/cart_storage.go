@@ -53,6 +53,21 @@ func (mr *MockCartStorageMockRecorder) DeleteItem(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteItem", reflect.TypeOf((*MockCartStorage)(nil).DeleteItem), arg0, arg1)
 }
 
+// GetItemsByUserId mocks base method.
+func (m *MockCartStorage) GetItemsByUserId(arg0 context.Context, arg1 int64) ([]models.CartItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetItemsByUserId", arg0, arg1)
+	ret0, _ := ret[0].([]models.CartItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetItemsByUserId indicates an expected call of GetItemsByUserId.
+func (mr *MockCartStorageMockRecorder) GetItemsByUserId(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetItemsByUserId", reflect.TypeOf((*MockCartStorage)(nil).GetItemsByUserId), arg0, arg1)
+}
+
 // SaveItem mocks base method.
 func (m *MockCartStorage) SaveItem(arg0 context.Context, arg1 models.CartItem) error {
 	m.ctrl.T.Helper()

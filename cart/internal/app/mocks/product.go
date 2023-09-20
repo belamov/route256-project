@@ -11,6 +11,7 @@ package services
 import (
 	context "context"
 	reflect "reflect"
+	models "route256/cart/internal/app/models"
 
 	gomock "go.uber.org/mock/gomock"
 )
@@ -39,11 +40,12 @@ func (m *MockProductService) EXPECT() *MockProductServiceMockRecorder {
 }
 
 // GetProduct mocks base method.
-func (m *MockProductService) GetProduct(arg0 context.Context, arg1 uint32) error {
+func (m *MockProductService) GetProduct(arg0 context.Context, arg1 uint32) (models.CartItemInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProduct", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(models.CartItemInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetProduct indicates an expected call of GetProduct.

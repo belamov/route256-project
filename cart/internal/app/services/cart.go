@@ -12,6 +12,7 @@ import (
 type Cart interface {
 	AddItem(ctx context.Context, item models.CartItem) error
 	DeleteItem(ctx context.Context, item models.CartItem) error
+	GetItemsByUserId(ctx context.Context, userId int64) ([]models.CartItemWithInfo, uint32, error)
 }
 
 var (
@@ -21,7 +22,7 @@ var (
 )
 
 type ProductService interface {
-	GetProduct(ctx context.Context, sku uint32) error
+	GetProduct(ctx context.Context, sku uint32) (models.CartItemInfo, error)
 }
 
 type StocksService interface {
@@ -31,6 +32,7 @@ type StocksService interface {
 type CartStorage interface {
 	SaveItem(ctx context.Context, item models.CartItem) error
 	DeleteItem(ctx context.Context, item models.CartItem) error
+	GetItemsByUserId(ctx context.Context, userId int64) ([]models.CartItem, error)
 }
 
 type cartService struct {
@@ -60,7 +62,7 @@ func (c *cartService) AddItem(ctx context.Context, item models.CartItem) error {
 		return ErrItemInvalid
 	}
 
-	err := c.productService.GetProduct(ctx, item.Sku)
+	_, err := c.productService.GetProduct(ctx, item.Sku)
 	if err != nil {
 		return ErrSkuInvalid
 	}
@@ -93,4 +95,35 @@ func (c *cartService) DeleteItem(ctx context.Context, item models.CartItem) erro
 	}
 
 	return nil
+}
+
+func (c *cartService) GetItemsByUserId(ctx context.Context, userId int64) ([]models.CartItemWithInfo, uint32, error) {
+	if userId == 0 {
+		return nil, 0, errors.New("user id is required")
+	}
+
+	items, err := c.cartStorage.GetItemsByUserId(ctx, userId)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error fetching users cart: %w", err)
+	}
+
+	cartItemsWithInfo := make([]models.CartItemWithInfo, 0, len(items))
+	var totalPrice uint32 = 0
+	for _, item := range items {
+		itemInfo, err := c.productService.GetProduct(ctx, item.Sku)
+		if err != nil {
+			return nil, 0, fmt.Errorf("error fetching product info: %w", err)
+		}
+		cartItemWithInfo := models.CartItemWithInfo{
+			User:  userId,
+			Sku:   item.Sku,
+			Count: item.Count,
+			Name:  itemInfo.Name,
+			Price: itemInfo.Price,
+		}
+		cartItemsWithInfo = append(cartItemsWithInfo, cartItemWithInfo)
+		totalPrice += cartItemWithInfo.Price
+	}
+
+	return cartItemsWithInfo, totalPrice, nil
 }
