@@ -39,6 +39,20 @@ func (m *MockCartStorage) EXPECT() *MockCartStorageMockRecorder {
 	return m.recorder
 }
 
+// DeleteItem mocks base method.
+func (m *MockCartStorage) DeleteItem(arg0 context.Context, arg1 models.CartItem) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteItem", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteItem indicates an expected call of DeleteItem.
+func (mr *MockCartStorageMockRecorder) DeleteItem(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteItem", reflect.TypeOf((*MockCartStorage)(nil).DeleteItem), arg0, arg1)
+}
+
 // SaveItem mocks base method.
 func (m *MockCartStorage) SaveItem(arg0 context.Context, arg1 models.CartItem) error {
 	m.ctrl.T.Helper()

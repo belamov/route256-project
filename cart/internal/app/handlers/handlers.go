@@ -28,6 +28,7 @@ func NewRouter(cart services.Cart) http.Handler {
 	r.Use(middleware.Heartbeat("/ping"))
 
 	r.Post("/cart/item/add", h.AddItem)
+	r.Post("/cart/item/delete", h.DeleteItem)
 
 	return r
 }

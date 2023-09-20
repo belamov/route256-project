@@ -11,6 +11,7 @@ import (
 
 type Cart interface {
 	AddItem(ctx context.Context, item models.CartItem) error
+	DeleteItem(ctx context.Context, item models.CartItem) error
 }
 
 var (
@@ -29,6 +30,7 @@ type StocksService interface {
 
 type CartStorage interface {
 	SaveItem(ctx context.Context, item models.CartItem) error
+	DeleteItem(ctx context.Context, item models.CartItem) error
 }
 
 type cartService struct {
@@ -50,9 +52,17 @@ func NewCartService(
 }
 
 func (c *cartService) AddItem(ctx context.Context, item models.CartItem) error {
-	err := c.validateItem(ctx, item)
+	if item.Count <= 0 {
+		return ErrItemInvalid
+	}
+
+	if item.User == 0 {
+		return ErrItemInvalid
+	}
+
+	err := c.productService.GetProduct(ctx, item.Sku)
 	if err != nil {
-		return err
+		return ErrSkuInvalid
 	}
 
 	stocksAvailable, err := c.stocksService.GetStocksInfo(ctx, item.Sku)
@@ -72,14 +82,14 @@ func (c *cartService) AddItem(ctx context.Context, item models.CartItem) error {
 	return nil
 }
 
-func (c *cartService) validateItem(ctx context.Context, item models.CartItem) error {
-	if item.Count <= 0 {
+func (c *cartService) DeleteItem(ctx context.Context, item models.CartItem) error {
+	if item.User == 0 {
 		return ErrItemInvalid
 	}
 
-	err := c.productService.GetProduct(ctx, item.Sku)
+	err := c.cartStorage.DeleteItem(ctx, item)
 	if err != nil {
-		return ErrSkuInvalid
+		return fmt.Errorf("error deleting item from cart: %w", err)
 	}
 
 	return nil

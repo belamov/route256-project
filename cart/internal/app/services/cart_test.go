@@ -103,3 +103,16 @@ func (ts *CartTestSuite) TestAddItemInsufficientStock() {
 	err := ts.cart.AddItem(ctx, item)
 	assert.ErrorIs(ts.T(), err, ErrInsufficientStocks)
 }
+
+func (ts *CartTestSuite) TestDeleteItem() {
+	ctx := context.Background()
+	item := models.CartItem{
+		User:  1,
+		Sku:   1,
+		Count: 1,
+	}
+
+	ts.mockCartStorage.EXPECT().DeleteItem(ctx, item).Return(nil)
+	err := ts.cart.DeleteItem(ctx, item)
+	assert.NoError(ts.T(), err)
+}
