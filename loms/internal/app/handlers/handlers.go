@@ -31,6 +31,7 @@ func NewRouter(loms services.Loms) http.Handler {
 	r.Post("/order/info", h.OrderInfo)
 	r.Post("/order/pay", h.OrderPay)
 	r.Post("/order/cancel", h.OrderCancel)
+	r.Post("/stock/info", h.StockInfo)
 
 	return r
 }

@@ -16,6 +16,7 @@ type Loms interface {
 	OrderInfo(ctx context.Context, orderId int64) (models.Order, error)
 	OrderPay(ctx context.Context, orderId int64) error
 	OrderCancel(ctx context.Context, orderId int64) error
+	StockInfo(ctx context.Context, sku uint32) (uint64, error)
 }
 
 var (
@@ -35,6 +36,7 @@ type StocksStorage interface {
 	Reserve(ctx context.Context, order models.Order) error
 	ReserveRemove(ctx context.Context, order models.Order) error
 	ReserveCancel(ctx context.Context, order models.Order) error
+	GetBySku(ctx context.Context, sku uint32) (uint64, error)
 }
 
 type lomsService struct {
@@ -162,4 +164,13 @@ func (l *lomsService) OrderCancel(ctx context.Context, orderId int64) error {
 	}
 
 	return nil
+}
+
+func (l *lomsService) StockInfo(ctx context.Context, sku uint32) (uint64, error) {
+	count, err := l.stocksStorage.GetBySku(ctx, sku)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }

@@ -39,6 +39,21 @@ func (m *MockStocksStorage) EXPECT() *MockStocksStorageMockRecorder {
 	return m.recorder
 }
 
+// GetBySku mocks base method.
+func (m *MockStocksStorage) GetBySku(arg0 context.Context, arg1 uint32) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBySku", arg0, arg1)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBySku indicates an expected call of GetBySku.
+func (mr *MockStocksStorageMockRecorder) GetBySku(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBySku", reflect.TypeOf((*MockStocksStorage)(nil).GetBySku), arg0, arg1)
+}
+
 // Reserve mocks base method.
 func (m *MockStocksStorage) Reserve(arg0 context.Context, arg1 models.Order) error {
 	m.ctrl.T.Helper()
