@@ -39,6 +39,20 @@ func (m *MockLoms) EXPECT() *MockLomsMockRecorder {
 	return m.recorder
 }
 
+// OrderCancel mocks base method.
+func (m *MockLoms) OrderCancel(arg0 context.Context, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OrderCancel", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OrderCancel indicates an expected call of OrderCancel.
+func (mr *MockLomsMockRecorder) OrderCancel(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OrderCancel", reflect.TypeOf((*MockLoms)(nil).OrderCancel), arg0, arg1)
+}
+
 // OrderCreate mocks base method.
 func (m *MockLoms) OrderCreate(arg0 context.Context, arg1 int64, arg2 []models.OrderItem) (models.Order, error) {
 	m.ctrl.T.Helper()

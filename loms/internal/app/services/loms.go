@@ -14,7 +14,8 @@ import (
 type Loms interface {
 	OrderCreate(ctx context.Context, userId int64, items []models.OrderItem) (models.Order, error)
 	OrderInfo(ctx context.Context, orderId int64) (models.Order, error)
-	OrderPay(ctx context.Context, id int64) error
+	OrderPay(ctx context.Context, orderId int64) error
+	OrderCancel(ctx context.Context, orderId int64) error
 }
 
 var (
@@ -33,6 +34,7 @@ type OrdersStorage interface {
 type StocksStorage interface {
 	Reserve(ctx context.Context, order models.Order) error
 	ReserveRemove(ctx context.Context, order models.Order) error
+	ReserveCancel(ctx context.Context, order models.Order) error
 }
 
 type lomsService struct {
@@ -126,6 +128,37 @@ func (l *lomsService) OrderPay(ctx context.Context, orderId int64) error {
 			Any("orderId", orderId).
 			Msg("failed setting order status to payed!")
 		return fmt.Errorf("failed setting order status to payed!: %w", err)
+	}
+
+	return nil
+}
+
+func (l *lomsService) OrderCancel(ctx context.Context, orderId int64) error {
+	order, err := l.ordersStorage.GetOrderByOrderId(ctx, orderId)
+	if errors.Is(err, storage.ErrOrderNotFound) {
+		return ErrOrderNotFound
+	}
+	if err != nil {
+		log.Err(err).
+			Int64("orderId", orderId).
+			Msg("failed getting order!")
+		return fmt.Errorf("failed getting order!: %w", err)
+	}
+
+	err = l.stocksStorage.ReserveCancel(ctx, order)
+	if err != nil {
+		log.Err(err).
+			Any("orderId", orderId).
+			Msg("failed canceling reserves!")
+		return fmt.Errorf("failed canceling reserve!: %w", err)
+	}
+
+	_, err = l.ordersStorage.SetStatus(ctx, order, models.OrderStatusCancelled)
+	if err != nil {
+		log.Err(err).
+			Any("orderId", orderId).
+			Msg("failed setting order status to canceled!")
+		return fmt.Errorf("failed setting order status to canceled!: %w", err)
 	}
 
 	return nil
