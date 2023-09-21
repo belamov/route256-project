@@ -39,32 +39,46 @@ func (m *MockLoms) EXPECT() *MockLomsMockRecorder {
 	return m.recorder
 }
 
-// CreateOrder mocks base method.
-func (m *MockLoms) CreateOrder(arg0 context.Context, arg1 int64, arg2 []models.OrderItem) (models.Order, error) {
+// OrderCreate mocks base method.
+func (m *MockLoms) OrderCreate(arg0 context.Context, arg1 int64, arg2 []models.OrderItem) (models.Order, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrder", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "OrderCreate", arg0, arg1, arg2)
 	ret0, _ := ret[0].(models.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateOrder indicates an expected call of CreateOrder.
-func (mr *MockLomsMockRecorder) CreateOrder(arg0, arg1, arg2 any) *gomock.Call {
+// OrderCreate indicates an expected call of OrderCreate.
+func (mr *MockLomsMockRecorder) OrderCreate(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrder", reflect.TypeOf((*MockLoms)(nil).CreateOrder), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OrderCreate", reflect.TypeOf((*MockLoms)(nil).OrderCreate), arg0, arg1, arg2)
 }
 
-// GetOrderById mocks base method.
-func (m *MockLoms) GetOrderById(arg0 context.Context, arg1 int64) (models.Order, error) {
+// OrderInfo mocks base method.
+func (m *MockLoms) OrderInfo(arg0 context.Context, arg1 int64) (models.Order, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrderById", arg0, arg1)
+	ret := m.ctrl.Call(m, "OrderInfo", arg0, arg1)
 	ret0, _ := ret[0].(models.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetOrderById indicates an expected call of GetOrderById.
-func (mr *MockLomsMockRecorder) GetOrderById(arg0, arg1 any) *gomock.Call {
+// OrderInfo indicates an expected call of OrderInfo.
+func (mr *MockLomsMockRecorder) OrderInfo(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderById", reflect.TypeOf((*MockLoms)(nil).GetOrderById), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OrderInfo", reflect.TypeOf((*MockLoms)(nil).OrderInfo), arg0, arg1)
+}
+
+// OrderPay mocks base method.
+func (m *MockLoms) OrderPay(arg0 context.Context, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OrderPay", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OrderPay indicates an expected call of OrderPay.
+func (mr *MockLomsMockRecorder) OrderPay(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OrderPay", reflect.TypeOf((*MockLoms)(nil).OrderPay), arg0, arg1)
 }

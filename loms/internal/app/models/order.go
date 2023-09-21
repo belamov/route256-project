@@ -3,22 +3,25 @@ package models
 type OrderStatus uint16
 
 const (
-	OrderStatusUndefined OrderStatus = iota
-	OrderStatusNew
-	OrderStatusFailed
+	OrderStatusNew OrderStatus = iota
 	OrderStatusAwaitingPayment
+	OrderStatusFailed
+	OrderStatusPayed
+	OrderStatusCancelled
 )
 
 func (s OrderStatus) String() string {
 	switch s {
-	case OrderStatusUndefined:
-		return "undefined"
 	case OrderStatusNew:
 		return "new"
+	case OrderStatusAwaitingPayment:
+		return "awaiting payment"
 	case OrderStatusFailed:
 		return "failed"
-	case OrderStatusAwaitingPayment:
-		return "awaiting_payment"
+	case OrderStatusPayed:
+		return "payed"
+	case OrderStatusCancelled:
+		return "canceled"
 	}
 	return "unknown"
 }

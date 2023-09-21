@@ -40,7 +40,7 @@ func (s *HandlersTestSuite) TestHandler_OrderInfo() {
 		UserId: userId,
 	}
 
-	s.mockService.EXPECT().GetOrderById(gomock.Any(), orderId).Return(foundOrder, nil)
+	s.mockService.EXPECT().OrderInfo(gomock.Any(), orderId).Return(foundOrder, nil)
 
 	result, response := s.testRequest(
 		http.MethodPost,
@@ -69,7 +69,7 @@ func (s *HandlersTestSuite) TestHandler_OrderInfoNotFound() {
 	body, err := json.Marshal(req)
 	require.NoError(s.T(), err)
 
-	s.mockService.EXPECT().GetOrderById(gomock.Any(), orderId).Return(models.Order{}, services.ErrOrderNotFound)
+	s.mockService.EXPECT().OrderInfo(gomock.Any(), orderId).Return(models.Order{}, services.ErrOrderNotFound)
 
 	result, _ := s.testRequest(
 		http.MethodPost,

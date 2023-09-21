@@ -25,7 +25,7 @@ type CreateOrderResponse struct {
 	OrderId int64 `json:"orderID,omitempty"`
 }
 
-func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) OrderCreate(w http.ResponseWriter, r *http.Request) {
 	var req CreateOrderRequest
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&req); err != nil {
@@ -41,7 +41,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	order, err := h.loms.CreateOrder(r.Context(), req.UserId, orderItems)
+	order, err := h.loms.OrderCreate(r.Context(), req.UserId, orderItems)
 	if errors.Is(err, services.ErrInsufficientStocks) {
 		http.Error(w, err.Error(), http.StatusPreconditionFailed)
 		return

@@ -27,8 +27,9 @@ func NewRouter(loms services.Loms) http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Heartbeat("/ping"))
 
-	r.Post("/order/create", h.CreateOrder)
+	r.Post("/order/create", h.OrderCreate)
 	r.Post("/order/info", h.OrderInfo)
+	r.Post("/order/pay", h.OrderPay)
 
 	return r
 }

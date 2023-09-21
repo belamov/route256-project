@@ -40,7 +40,7 @@ func (m *MockStocksStorage) EXPECT() *MockStocksStorageMockRecorder {
 }
 
 // Reserve mocks base method.
-func (m *MockStocksStorage) Reserve(arg0 context.Context, arg1 []models.OrderItem) error {
+func (m *MockStocksStorage) Reserve(arg0 context.Context, arg1 models.Order) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Reserve", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -51,4 +51,18 @@ func (m *MockStocksStorage) Reserve(arg0 context.Context, arg1 []models.OrderIte
 func (mr *MockStocksStorageMockRecorder) Reserve(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reserve", reflect.TypeOf((*MockStocksStorage)(nil).Reserve), arg0, arg1)
+}
+
+// ReserveRemove mocks base method.
+func (m *MockStocksStorage) ReserveRemove(arg0 context.Context, arg1 models.Order) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReserveRemove", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReserveRemove indicates an expected call of ReserveRemove.
+func (mr *MockStocksStorageMockRecorder) ReserveRemove(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReserveRemove", reflect.TypeOf((*MockStocksStorage)(nil).ReserveRemove), arg0, arg1)
 }

@@ -82,7 +82,7 @@ func (ts *LomsTestSuite) TestCreateOrder() {
 	ts.mockOrderStorage.EXPECT().Create(ctx, userId, gomock.Any(), orderItems).Return(newOrder, nil)
 	ts.mockOrderStorage.EXPECT().SetStatus(ctx, gomock.Any(), gomock.Any()).Return(awaitingOrder, nil)
 
-	order, err := ts.loms.CreateOrder(ctx, userId, orderItems)
+	order, err := ts.loms.OrderCreate(ctx, userId, orderItems)
 	assert.NoError(ts.T(), err)
 	assert.Equal(ts.T(), awaitingOrder, order)
 }
@@ -117,7 +117,7 @@ func (ts *LomsTestSuite) TestCreateOrderInsufficientStocks() {
 	ts.mockStocksStorage.EXPECT().Reserve(ctx, gomock.Any()).Return(ErrInsufficientStocks)
 	ts.mockOrderStorage.EXPECT().SetStatus(ctx, gomock.Any(), gomock.Any()).Return(failedOrder, nil)
 
-	order, err := ts.loms.CreateOrder(ctx, userId, orderItems)
+	order, err := ts.loms.OrderCreate(ctx, userId, orderItems)
 	assert.ErrorIs(ts.T(), err, ErrInsufficientStocks)
 	assert.Equal(ts.T(), models.Order{}, order)
 }
@@ -141,9 +141,9 @@ func (ts *LomsTestSuite) TestGetOrderById() {
 		Status: models.OrderStatusNew,
 	}
 
-	ts.mockOrderStorage.EXPECT().GetById(ctx, foundOrder.Id).Return(foundOrder, nil)
+	ts.mockOrderStorage.EXPECT().GetOrderByOrderId(ctx, foundOrder.Id).Return(foundOrder, nil)
 
-	order, err := ts.loms.GetOrderById(ctx, foundOrder.Id)
+	order, err := ts.loms.OrderInfo(ctx, foundOrder.Id)
 	assert.NoError(ts.T(), err)
 	assert.Equal(ts.T(), foundOrder, order)
 }
@@ -152,9 +152,9 @@ func (ts *LomsTestSuite) TestGetOrderByIdNotFound() {
 	ctx := context.Background()
 	var orderId int64 = 1
 
-	ts.mockOrderStorage.EXPECT().GetById(ctx, orderId).Return(models.Order{}, ErrOrderNotFound)
+	ts.mockOrderStorage.EXPECT().GetOrderByOrderId(ctx, orderId).Return(models.Order{}, ErrOrderNotFound)
 
-	order, err := ts.loms.GetOrderById(ctx, orderId)
+	order, err := ts.loms.OrderInfo(ctx, orderId)
 	assert.ErrorIs(ts.T(), err, ErrOrderNotFound)
 	assert.Empty(ts.T(), order)
 }

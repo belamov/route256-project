@@ -33,7 +33,7 @@ func (h *Handler) OrderInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := h.loms.GetOrderById(r.Context(), req.OrderId)
+	order, err := h.loms.OrderInfo(r.Context(), req.OrderId)
 	if errors.Is(err, services.ErrOrderNotFound) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

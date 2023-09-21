@@ -46,7 +46,7 @@ func (s *HandlersTestSuite) TestHandler_CreateOrder() {
 		},
 		Status: models.OrderStatusAwaitingPayment,
 	}
-	s.mockService.EXPECT().CreateOrder(gomock.Any(), userId, gomock.Any()).Times(1).Return(createdOrder, nil)
+	s.mockService.EXPECT().OrderCreate(gomock.Any(), userId, gomock.Any()).Times(1).Return(createdOrder, nil)
 
 	result, response := s.testRequest(
 		http.MethodPost,
@@ -84,7 +84,7 @@ func (s *HandlersTestSuite) TestHandler_CreateOrderInsufficientStocks() {
 	require.NoError(s.T(), err)
 
 	createdOrder := models.Order{}
-	s.mockService.EXPECT().CreateOrder(gomock.Any(), userId, gomock.Any()).Times(1).Return(createdOrder, services.ErrInsufficientStocks)
+	s.mockService.EXPECT().OrderCreate(gomock.Any(), userId, gomock.Any()).Times(1).Return(createdOrder, services.ErrInsufficientStocks)
 
 	result, _ := s.testRequest(
 		http.MethodPost,
