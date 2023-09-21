@@ -37,6 +37,7 @@ type CartStorage interface {
 	SaveItem(ctx context.Context, item models.CartItem) error
 	DeleteItem(ctx context.Context, item models.CartItem) error
 	GetItemsByUserId(ctx context.Context, userId int64) ([]models.CartItem, error)
+	DeleteItemsByUserId(ctx context.Context, userId int64) error
 }
 
 type cartService struct {
@@ -159,5 +160,14 @@ func (c *cartService) Checkout(ctx context.Context, userId int64) (int64, error)
 }
 
 func (c *cartService) DeleteItemsByUserId(ctx context.Context, userId int64) error {
+	if userId == 0 {
+		return errors.New("user id is required")
+	}
+
+	err := c.cartStorage.DeleteItemsByUserId(ctx, userId)
+	if err != nil {
+		return fmt.Errorf("error clearing cart from storage: %w", err)
+	}
+
 	return nil
 }

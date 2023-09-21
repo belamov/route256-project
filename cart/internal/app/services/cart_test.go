@@ -190,6 +190,7 @@ func (ts *CartTestSuite) TestCheckout() {
 		},
 	}
 	ts.mockCartStorage.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
+	ts.mockCartStorage.EXPECT().DeleteItemsByUserId(ctx, userId).Return(nil)
 	orderId := int64(1000)
 	ts.mockLomsService.EXPECT().
 		CreateOrder(ctx, userId, gomock.Any()).
@@ -217,4 +218,19 @@ func (ts *CartTestSuite) TestCheckoutNoUser() {
 	orderId, err := ts.cart.Checkout(ctx, userId)
 	assert.Error(ts.T(), err)
 	assert.Equal(ts.T(), int64(0), orderId)
+}
+
+func (ts *CartTestSuite) TestDeleteItemsByUserId() {
+	ctx := context.Background()
+	var userId int64 = 1
+	ts.mockCartStorage.EXPECT().DeleteItemsByUserId(ctx, userId).Return(nil)
+	err := ts.cart.DeleteItemsByUserId(ctx, userId)
+	assert.NoError(ts.T(), err)
+}
+
+func (ts *CartTestSuite) TestDeleteItemsByUserIdNoUser() {
+	ctx := context.Background()
+	var userId int64 = 0
+	err := ts.cart.DeleteItemsByUserId(ctx, userId)
+	assert.Error(ts.T(), err)
 }
