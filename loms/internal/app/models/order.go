@@ -9,9 +9,24 @@ const (
 	OrderStatusAwaitingPayment
 )
 
+func (s OrderStatus) String() string {
+	switch s {
+	case OrderStatusUndefined:
+		return "undefined"
+	case OrderStatusNew:
+		return "new"
+	case OrderStatusFailed:
+		return "failed"
+	case OrderStatusAwaitingPayment:
+		return "awaiting_payment"
+	}
+	return "unknown"
+}
+
 type Order struct {
 	Items  []OrderItem
-	Id     int
+	Id     int64
+	UserId int64
 	Status OrderStatus
 }
 

@@ -53,3 +53,18 @@ func (mr *MockLomsMockRecorder) CreateOrder(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrder", reflect.TypeOf((*MockLoms)(nil).CreateOrder), arg0, arg1, arg2)
 }
+
+// GetOrderById mocks base method.
+func (m *MockLoms) GetOrderById(arg0 context.Context, arg1 int64) (models.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderById", arg0, arg1)
+	ret0, _ := ret[0].(models.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderById indicates an expected call of GetOrderById.
+func (mr *MockLomsMockRecorder) GetOrderById(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderById", reflect.TypeOf((*MockLoms)(nil).GetOrderById), arg0, arg1)
+}

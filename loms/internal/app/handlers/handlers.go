@@ -28,6 +28,7 @@ func NewRouter(loms services.Loms) http.Handler {
 	r.Use(middleware.Heartbeat("/ping"))
 
 	r.Post("/order/create", h.CreateOrder)
+	r.Post("/order/info", h.OrderInfo)
 
 	return r
 }

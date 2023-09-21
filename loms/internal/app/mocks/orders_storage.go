@@ -54,6 +54,21 @@ func (mr *MockOrdersStorageMockRecorder) Create(arg0, arg1, arg2, arg3 any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockOrdersStorage)(nil).Create), arg0, arg1, arg2, arg3)
 }
 
+// GetById mocks base method.
+func (m *MockOrdersStorage) GetById(arg0 context.Context, arg1 int64) (models.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetById", arg0, arg1)
+	ret0, _ := ret[0].(models.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetById indicates an expected call of GetById.
+func (mr *MockOrdersStorageMockRecorder) GetById(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockOrdersStorage)(nil).GetById), arg0, arg1)
+}
+
 // SetStatus mocks base method.
 func (m *MockOrdersStorage) SetStatus(arg0 context.Context, arg1 models.Order, arg2 models.OrderStatus) (models.Order, error) {
 	m.ctrl.T.Helper()

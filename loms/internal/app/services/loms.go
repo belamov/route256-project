@@ -5,21 +5,28 @@ import (
 	"errors"
 	"fmt"
 
+	"route256/loms/internal/app/storage"
+
 	"github.com/rs/zerolog/log"
 	"route256/loms/internal/app/models"
 )
 
 type Loms interface {
 	CreateOrder(ctx context.Context, userId int64, items []models.OrderItem) (models.Order, error)
+	GetOrderById(ctx context.Context, orderId int64) (models.Order, error)
 }
 
-var ErrInsufficientStocks = errors.New("insufficient stocks")
+var (
+	ErrInsufficientStocks = errors.New("insufficient stocks")
+	ErrOrderNotFound      = errors.New("order not found")
+)
 
 type ProductService interface{}
 
 type OrdersStorage interface {
 	Create(ctx context.Context, userId int64, statusNew models.OrderStatus, items []models.OrderItem) (models.Order, error)
 	SetStatus(ctx context.Context, order models.Order, status models.OrderStatus) (models.Order, error)
+	GetById(ctx context.Context, order int64) (models.Order, error)
 }
 
 type StocksStorage interface {
@@ -44,7 +51,7 @@ func NewLomsService(
 	}
 }
 
-func (l lomsService) CreateOrder(ctx context.Context, userId int64, items []models.OrderItem) (models.Order, error) {
+func (l *lomsService) CreateOrder(ctx context.Context, userId int64, items []models.OrderItem) (models.Order, error) {
 	order, err := l.ordersStorage.Create(ctx, userId, models.OrderStatusNew, items)
 	if err != nil {
 		log.Err(err).
@@ -57,7 +64,7 @@ func (l lomsService) CreateOrder(ctx context.Context, userId int64, items []mode
 		failedOrder, errSetStatus := l.ordersStorage.SetStatus(ctx, order, models.OrderStatusFailed)
 		if errSetStatus != nil {
 			log.Err(errSetStatus).
-				Int("orderId", failedOrder.Id).
+				Int64("orderId", failedOrder.Id).
 				Msg("failed transition order to failed status!")
 			return models.Order{}, fmt.Errorf("failed transition order to failed status!: %w", errSetStatus)
 		}
@@ -68,10 +75,25 @@ func (l lomsService) CreateOrder(ctx context.Context, userId int64, items []mode
 	awaitingOrder, err := l.ordersStorage.SetStatus(ctx, order, models.OrderStatusAwaitingPayment)
 	if err != nil {
 		log.Err(err).
-			Int("orderId", awaitingOrder.Id).
+			Int64("orderId", awaitingOrder.Id).
 			Msg("failed transition order to awaiting status!")
 		return models.Order{}, fmt.Errorf("failed transition order to failed status!: %w", err)
 	}
 
 	return awaitingOrder, nil
+}
+
+func (l *lomsService) GetOrderById(ctx context.Context, orderId int64) (models.Order, error) {
+	order, err := l.ordersStorage.GetById(ctx, orderId)
+	if errors.Is(err, storage.ErrOrderNotFound) {
+		return models.Order{}, ErrOrderNotFound
+	}
+	if err != nil {
+		log.Err(err).
+			Int64("orderId", orderId).
+			Msg("failed getting order!")
+		return models.Order{}, fmt.Errorf("failed getting order!: %w", err)
+	}
+
+	return order, nil
 }

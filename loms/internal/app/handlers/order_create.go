@@ -22,7 +22,7 @@ type OrderItemRequest struct {
 }
 
 type CreateOrderResponse struct {
-	OrderId int `json:"orderID,omitempty"`
+	OrderId int64 `json:"orderID,omitempty"`
 }
 
 func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {

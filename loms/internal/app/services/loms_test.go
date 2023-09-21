@@ -121,3 +121,40 @@ func (ts *LomsTestSuite) TestCreateOrderInsufficientStocks() {
 	assert.ErrorIs(ts.T(), err, ErrInsufficientStocks)
 	assert.Equal(ts.T(), models.Order{}, order)
 }
+
+func (ts *LomsTestSuite) TestGetOrderById() {
+	ctx := context.Background()
+	orderItems := []models.OrderItem{
+		{
+			Sku:   1,
+			Count: 1,
+		},
+		{
+			Sku:   2,
+			Count: 2,
+		},
+	}
+
+	foundOrder := models.Order{
+		Id:     1,
+		Items:  orderItems,
+		Status: models.OrderStatusNew,
+	}
+
+	ts.mockOrderStorage.EXPECT().GetById(ctx, foundOrder.Id).Return(foundOrder, nil)
+
+	order, err := ts.loms.GetOrderById(ctx, foundOrder.Id)
+	assert.NoError(ts.T(), err)
+	assert.Equal(ts.T(), foundOrder, order)
+}
+
+func (ts *LomsTestSuite) TestGetOrderByIdNotFound() {
+	ctx := context.Background()
+	var orderId int64 = 1
+
+	ts.mockOrderStorage.EXPECT().GetById(ctx, orderId).Return(models.Order{}, ErrOrderNotFound)
+
+	order, err := ts.loms.GetOrderById(ctx, orderId)
+	assert.ErrorIs(ts.T(), err, ErrOrderNotFound)
+	assert.Empty(ts.T(), order)
+}
