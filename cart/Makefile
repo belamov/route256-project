@@ -20,9 +20,10 @@ fieldaligment-fix:
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) fieldalignment -fix ./... || true
 
 mock:
+	rm -f internal/app/mocks/*
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/cart.go -package=services route256/cart/internal/app/services Cart
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/cart_storage.go -package=services route256/cart/internal/app/services CartStorage
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/product.go -package=services route256/cart/internal/app/services ProductService
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/stock.go -package=services route256/cart/internal/app/services StocksService
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/loms.go -package=services route256/cart/internal/app/services LomsService
 
 

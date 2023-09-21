@@ -30,6 +30,7 @@ func NewRouter(cart services.Cart) http.Handler {
 	r.Post("/cart/item/add", h.AddItem)
 	r.Post("/cart/item/delete", h.DeleteItem)
 	r.Post("/cart/list", h.List)
+	r.Post("/cart/checkout", h.Checkout)
 
 	return r
 }

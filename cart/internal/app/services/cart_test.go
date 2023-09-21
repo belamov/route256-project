@@ -18,7 +18,7 @@ type CartTestSuite struct {
 	suite.Suite
 	mockCtrl           *gomock.Controller
 	mockCartStorage    *services.MockCartStorage
-	mockStocksService  *services.MockStocksService
+	mockLomsService    *services.MockLomsService
 	mockProductService *services.MockProductService
 	cart               Cart
 }
@@ -44,9 +44,9 @@ func (r Reporter) Fatalf(format string, args ...interface{}) {
 func (ts *CartTestSuite) SetupSuite() {
 	ts.mockCtrl = gomock.NewController(Reporter{ts.T()})
 	ts.mockCartStorage = services.NewMockCartStorage(ts.mockCtrl)
-	ts.mockStocksService = services.NewMockStocksService(ts.mockCtrl)
+	ts.mockLomsService = services.NewMockLomsService(ts.mockCtrl)
 	ts.mockProductService = services.NewMockProductService(ts.mockCtrl)
-	ts.cart = NewCartService(ts.mockProductService, ts.mockStocksService, ts.mockCartStorage)
+	ts.cart = NewCartService(ts.mockProductService, ts.mockLomsService, ts.mockCartStorage)
 }
 
 func TestHandlersTestSuite(t *testing.T) {
@@ -60,7 +60,7 @@ func (ts *CartTestSuite) TestAddItem() {
 		Sku:   1,
 		Count: 1,
 	}
-	ts.mockStocksService.EXPECT().GetStocksInfo(ctx, item.Sku).Times(1).Return(item.Count+1, nil)
+	ts.mockLomsService.EXPECT().GetStocksInfo(ctx, item.Sku).Times(1).Return(item.Count+1, nil)
 	ts.mockProductService.EXPECT().GetProduct(ctx, item.Sku).Times(1).Return(models.CartItemInfo{}, nil)
 	ts.mockCartStorage.EXPECT().SaveItem(ctx, item).Times(1).Return(nil)
 	err := ts.cart.AddItem(ctx, item)
@@ -74,7 +74,7 @@ func (ts *CartTestSuite) TestAddItemInvalidCount() {
 		Sku:   1,
 		Count: 0,
 	}
-	ts.mockStocksService.EXPECT().GetStocksInfo(ctx, item.Sku).Times(1).Return(item.Count+1, nil)
+	ts.mockLomsService.EXPECT().GetStocksInfo(ctx, item.Sku).Times(1).Return(item.Count+1, nil)
 	err := ts.cart.AddItem(ctx, item)
 	assert.ErrorIs(ts.T(), err, ErrItemInvalid)
 }
@@ -86,7 +86,7 @@ func (ts *CartTestSuite) TestAddItemInvalidSku() {
 		Sku:   1,
 		Count: 1,
 	}
-	ts.mockStocksService.EXPECT().GetStocksInfo(ctx, item.Sku).Times(1).Return(item.Count+1, nil)
+	ts.mockLomsService.EXPECT().GetStocksInfo(ctx, item.Sku).Times(1).Return(item.Count+1, nil)
 	ts.mockProductService.EXPECT().GetProduct(ctx, item.Sku).Times(1).Return(models.CartItemInfo{}, errors.New("not found"))
 	err := ts.cart.AddItem(ctx, item)
 	assert.ErrorIs(ts.T(), err, ErrSkuInvalid)
@@ -99,7 +99,7 @@ func (ts *CartTestSuite) TestAddItemInsufficientStock() {
 		Sku:   1,
 		Count: 1,
 	}
-	ts.mockStocksService.EXPECT().GetStocksInfo(ctx, item.Sku).Times(1).Return(item.Count-1, nil)
+	ts.mockLomsService.EXPECT().GetStocksInfo(ctx, item.Sku).Times(1).Return(item.Count-1, nil)
 	ts.mockProductService.EXPECT().GetProduct(ctx, item.Sku).Times(1).Return(models.CartItemInfo{}, nil)
 	err := ts.cart.AddItem(ctx, item)
 	assert.ErrorIs(ts.T(), err, ErrInsufficientStocks)
@@ -167,4 +167,54 @@ func (ts *CartTestSuite) TestGetItemsByUserIdNoUser() {
 		assert.Equal(ts.T(), strconv.Itoa(i), items[i].Name)
 		assert.Equal(ts.T(), uint32(item.Count), items[i].Price)
 	}
+}
+
+func (ts *CartTestSuite) TestCheckout() {
+	ctx := context.Background()
+	var userId int64 = 1
+	cartItems := []models.CartItem{
+		{
+			User:  1,
+			Sku:   1,
+			Count: 1,
+		},
+		{
+			User:  1,
+			Sku:   2,
+			Count: 2,
+		},
+		{
+			User:  1,
+			Sku:   3,
+			Count: 3,
+		},
+	}
+	ts.mockCartStorage.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
+	orderId := int64(1000)
+	ts.mockLomsService.EXPECT().
+		CreateOrder(ctx, userId, gomock.Any()).
+		Return(orderId, nil)
+
+	returnedOrderId, err := ts.cart.Checkout(ctx, userId)
+	assert.NoError(ts.T(), err)
+	assert.Equal(ts.T(), orderId, returnedOrderId)
+}
+
+func (ts *CartTestSuite) TestCheckoutEmptyCart() {
+	ctx := context.Background()
+	var userId int64 = 1
+	var cartItems []models.CartItem
+	ts.mockCartStorage.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
+
+	returnedOrderId, err := ts.cart.Checkout(ctx, userId)
+	assert.ErrorIs(ts.T(), err, ErrCartIsEmpty)
+	assert.Empty(ts.T(), returnedOrderId)
+}
+
+func (ts *CartTestSuite) TestCheckoutNoUser() {
+	ctx := context.Background()
+	var userId int64 = 0
+	orderId, err := ts.cart.Checkout(ctx, userId)
+	assert.Error(ts.T(), err)
+	assert.Equal(ts.T(), int64(0), orderId)
 }

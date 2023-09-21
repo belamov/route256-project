@@ -17,5 +17,3 @@ require (
 	golang.org/x/sys v0.11.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-require github.com/belamov/ypgo-metrics v0.0.0-20230911171353-23f026e20973

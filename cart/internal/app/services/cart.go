@@ -13,20 +13,24 @@ type Cart interface {
 	AddItem(ctx context.Context, item models.CartItem) error
 	DeleteItem(ctx context.Context, item models.CartItem) error
 	GetItemsByUserId(ctx context.Context, userId int64) ([]models.CartItemWithInfo, uint32, error)
+	Checkout(ctx context.Context, userId int64) (int64, error)
+	DeleteItemsByUserId(ctx context.Context, userId int64) error
 }
 
 var (
 	ErrItemInvalid        = errors.New("item is invalid")
 	ErrInsufficientStocks = errors.New("insufficient stocks")
 	ErrSkuInvalid         = errors.New("invalid sku")
+	ErrCartIsEmpty        = errors.New("cart is empty")
 )
 
 type ProductService interface {
 	GetProduct(ctx context.Context, sku uint32) (models.CartItemInfo, error)
 }
 
-type StocksService interface {
+type LomsService interface {
 	GetStocksInfo(ctx context.Context, sku uint32) (uint16, error)
+	CreateOrder(ctx context.Context, userId int64, items []models.CartItem) (int64, error)
 }
 
 type CartStorage interface {
@@ -37,18 +41,18 @@ type CartStorage interface {
 
 type cartService struct {
 	productService ProductService
-	stocksService  StocksService
+	lomsService    LomsService
 	cartStorage    CartStorage
 }
 
 func NewCartService(
 	productService ProductService,
-	stocksService StocksService,
+	lomsService LomsService,
 	cartStorage CartStorage,
 ) Cart {
 	return &cartService{
 		productService: productService,
-		stocksService:  stocksService,
+		lomsService:    lomsService,
 		cartStorage:    cartStorage,
 	}
 }
@@ -67,7 +71,7 @@ func (c *cartService) AddItem(ctx context.Context, item models.CartItem) error {
 		return ErrSkuInvalid
 	}
 
-	stocksAvailable, err := c.stocksService.GetStocksInfo(ctx, item.Sku)
+	stocksAvailable, err := c.lomsService.GetStocksInfo(ctx, item.Sku)
 	if err != nil {
 		log.Err(err).Msg("get stocks info error")
 		return fmt.Errorf("error getting stock for sku: %w", err)
@@ -126,4 +130,34 @@ func (c *cartService) GetItemsByUserId(ctx context.Context, userId int64) ([]mod
 	}
 
 	return cartItemsWithInfo, totalPrice, nil
+}
+
+func (c *cartService) Checkout(ctx context.Context, userId int64) (int64, error) {
+	if userId == 0 {
+		return 0, errors.New("user id is required")
+	}
+
+	items, err := c.cartStorage.GetItemsByUserId(ctx, userId)
+	if err != nil {
+		return 0, fmt.Errorf("error fetching users cart: %w", err)
+	}
+	if len(items) == 0 {
+		return 0, ErrCartIsEmpty
+	}
+
+	orderId, err := c.lomsService.CreateOrder(ctx, userId, items)
+	if err != nil {
+		return 0, fmt.Errorf("error creating order: %w", err)
+	}
+
+	err = c.DeleteItemsByUserId(ctx, userId)
+	if err != nil {
+		return 0, fmt.Errorf("error clearing cart after order creating: %w", err)
+	}
+
+	return orderId, nil
+}
+
+func (c *cartService) DeleteItemsByUserId(ctx context.Context, userId int64) error {
+	return nil
 }
