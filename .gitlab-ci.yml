@@ -13,8 +13,8 @@ test cart:
   stage: cart
   script:
     - cd cart
-    - go vet $(go list ./... | grep -v /vendor/)
-    - go test -race $(go list ./... | grep -v /vendor/)
+    - go vet ./...
+    - go test -v -race ./...
 
 
 lint cart:
@@ -29,14 +29,14 @@ fmt cart:
   script:
     - go install mvdan.cc/gofumpt@latest
     - cd cart
-    - gofumpt -d -e .
+    - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
 
 test loms:
   stage: loms
   script:
     - cd loms
-    - go vet $(go list ./... | grep -v /vendor/)
-    - go test -race $(go list ./... | grep -v /vendor/)
+    - go vet ./...
+    - go test -v -race ./...
 
 lint loms:
   stage: loms
@@ -50,4 +50,4 @@ fmt loms:
   script:
     - go install mvdan.cc/gofumpt@latest
     - cd loms
-    - gofumpt -d -e .
+    - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
