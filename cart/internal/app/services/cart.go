@@ -33,32 +33,32 @@ type LomsService interface {
 	CreateOrder(ctx context.Context, userId int64, items []models.CartItem) (int64, error)
 }
 
-type CartStorage interface {
+type CartProvider interface {
 	SaveItem(ctx context.Context, item models.CartItem) error
 	DeleteItem(ctx context.Context, item models.CartItem) error
 	GetItemsByUserId(ctx context.Context, userId int64) ([]models.CartItem, error)
 	DeleteItemsByUserId(ctx context.Context, userId int64) error
 }
 
-type cartService struct {
+type cart struct {
 	productService ProductService
 	lomsService    LomsService
-	cartStorage    CartStorage
+	cartProvider   CartProvider
 }
 
 func NewCartService(
 	productService ProductService,
 	lomsService LomsService,
-	cartStorage CartStorage,
+	cartStorage CartProvider,
 ) Cart {
-	return &cartService{
+	return &cart{
 		productService: productService,
 		lomsService:    lomsService,
-		cartStorage:    cartStorage,
+		cartProvider:   cartStorage,
 	}
 }
 
-func (c *cartService) AddItem(ctx context.Context, item models.CartItem) error {
+func (c *cart) AddItem(ctx context.Context, item models.CartItem) error {
 	if item.Count <= 0 {
 		return ErrItemInvalid
 	}
@@ -81,7 +81,7 @@ func (c *cartService) AddItem(ctx context.Context, item models.CartItem) error {
 		return ErrInsufficientStocks
 	}
 
-	err = c.cartStorage.SaveItem(ctx, item)
+	err = c.cartProvider.SaveItem(ctx, item)
 	if err != nil {
 		return fmt.Errorf("error adding item to cart: %w", err)
 	}
@@ -89,12 +89,12 @@ func (c *cartService) AddItem(ctx context.Context, item models.CartItem) error {
 	return nil
 }
 
-func (c *cartService) DeleteItem(ctx context.Context, item models.CartItem) error {
+func (c *cart) DeleteItem(ctx context.Context, item models.CartItem) error {
 	if item.User == 0 {
 		return ErrItemInvalid
 	}
 
-	err := c.cartStorage.DeleteItem(ctx, item)
+	err := c.cartProvider.DeleteItem(ctx, item)
 	if err != nil {
 		return fmt.Errorf("error deleting item from cart: %w", err)
 	}
@@ -102,12 +102,12 @@ func (c *cartService) DeleteItem(ctx context.Context, item models.CartItem) erro
 	return nil
 }
 
-func (c *cartService) GetItemsByUserId(ctx context.Context, userId int64) ([]models.CartItemWithInfo, uint32, error) {
+func (c *cart) GetItemsByUserId(ctx context.Context, userId int64) ([]models.CartItemWithInfo, uint32, error) {
 	if userId == 0 {
 		return nil, 0, errors.New("user id is required")
 	}
 
-	items, err := c.cartStorage.GetItemsByUserId(ctx, userId)
+	items, err := c.cartProvider.GetItemsByUserId(ctx, userId)
 	if err != nil {
 		return nil, 0, fmt.Errorf("error fetching users cart: %w", err)
 	}
@@ -133,12 +133,12 @@ func (c *cartService) GetItemsByUserId(ctx context.Context, userId int64) ([]mod
 	return cartItemsWithInfo, totalPrice, nil
 }
 
-func (c *cartService) Checkout(ctx context.Context, userId int64) (int64, error) {
+func (c *cart) Checkout(ctx context.Context, userId int64) (int64, error) {
 	if userId == 0 {
 		return 0, errors.New("user id is required")
 	}
 
-	items, err := c.cartStorage.GetItemsByUserId(ctx, userId)
+	items, err := c.cartProvider.GetItemsByUserId(ctx, userId)
 	if err != nil {
 		return 0, fmt.Errorf("error fetching users cart: %w", err)
 	}
@@ -159,12 +159,12 @@ func (c *cartService) Checkout(ctx context.Context, userId int64) (int64, error)
 	return orderId, nil
 }
 
-func (c *cartService) DeleteItemsByUserId(ctx context.Context, userId int64) error {
+func (c *cart) DeleteItemsByUserId(ctx context.Context, userId int64) error {
 	if userId == 0 {
 		return errors.New("user id is required")
 	}
 
-	err := c.cartStorage.DeleteItemsByUserId(ctx, userId)
+	err := c.cartProvider.DeleteItemsByUserId(ctx, userId)
 	if err != nil {
 		return fmt.Errorf("error clearing cart from storage: %w", err)
 	}

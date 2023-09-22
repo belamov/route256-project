@@ -17,7 +17,7 @@ import (
 type CartTestSuite struct {
 	suite.Suite
 	mockCtrl           *gomock.Controller
-	mockCartStorage    *services.MockCartStorage
+	mockCartProvider   *services.MockCartProvider
 	mockLomsService    *services.MockLomsService
 	mockProductService *services.MockProductService
 	cart               Cart
@@ -43,10 +43,10 @@ func (r Reporter) Fatalf(format string, args ...interface{}) {
 
 func (ts *CartTestSuite) SetupSuite() {
 	ts.mockCtrl = gomock.NewController(Reporter{ts.T()})
-	ts.mockCartStorage = services.NewMockCartStorage(ts.mockCtrl)
+	ts.mockCartProvider = services.NewMockCartProvider(ts.mockCtrl)
 	ts.mockLomsService = services.NewMockLomsService(ts.mockCtrl)
 	ts.mockProductService = services.NewMockProductService(ts.mockCtrl)
-	ts.cart = NewCartService(ts.mockProductService, ts.mockLomsService, ts.mockCartStorage)
+	ts.cart = NewCartService(ts.mockProductService, ts.mockLomsService, ts.mockCartProvider)
 }
 
 func TestHandlersTestSuite(t *testing.T) {
@@ -62,7 +62,7 @@ func (ts *CartTestSuite) TestAddItem() {
 	}
 	ts.mockLomsService.EXPECT().GetStocksInfo(ctx, item.Sku).Times(1).Return(item.Count+1, nil)
 	ts.mockProductService.EXPECT().GetProduct(ctx, item.Sku).Times(1).Return(models.CartItemInfo{}, nil)
-	ts.mockCartStorage.EXPECT().SaveItem(ctx, item).Times(1).Return(nil)
+	ts.mockCartProvider.EXPECT().SaveItem(ctx, item).Times(1).Return(nil)
 	err := ts.cart.AddItem(ctx, item)
 	assert.NoError(ts.T(), err)
 }
@@ -113,7 +113,7 @@ func (ts *CartTestSuite) TestDeleteItem() {
 		Count: 1,
 	}
 
-	ts.mockCartStorage.EXPECT().DeleteItem(ctx, item).Return(nil)
+	ts.mockCartProvider.EXPECT().DeleteItem(ctx, item).Return(nil)
 	err := ts.cart.DeleteItem(ctx, item)
 	assert.NoError(ts.T(), err)
 }
@@ -147,7 +147,7 @@ func (ts *CartTestSuite) TestGetItemsByUserIdNoUser() {
 			Count: 3,
 		},
 	}
-	ts.mockCartStorage.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
+	ts.mockCartProvider.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
 	for i, item := range cartItems {
 		ts.mockProductService.EXPECT().
 			GetProduct(ctx, item.Sku).
@@ -189,8 +189,8 @@ func (ts *CartTestSuite) TestCheckout() {
 			Count: 3,
 		},
 	}
-	ts.mockCartStorage.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
-	ts.mockCartStorage.EXPECT().DeleteItemsByUserId(ctx, userId).Return(nil)
+	ts.mockCartProvider.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
+	ts.mockCartProvider.EXPECT().DeleteItemsByUserId(ctx, userId).Return(nil)
 	orderId := int64(1000)
 	ts.mockLomsService.EXPECT().
 		CreateOrder(ctx, userId, gomock.Any()).
@@ -205,7 +205,7 @@ func (ts *CartTestSuite) TestCheckoutEmptyCart() {
 	ctx := context.Background()
 	var userId int64 = 1
 	var cartItems []models.CartItem
-	ts.mockCartStorage.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
+	ts.mockCartProvider.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
 
 	returnedOrderId, err := ts.cart.Checkout(ctx, userId)
 	assert.ErrorIs(ts.T(), err, ErrCartIsEmpty)
@@ -223,7 +223,7 @@ func (ts *CartTestSuite) TestCheckoutNoUser() {
 func (ts *CartTestSuite) TestDeleteItemsByUserId() {
 	ctx := context.Background()
 	var userId int64 = 1
-	ts.mockCartStorage.EXPECT().DeleteItemsByUserId(ctx, userId).Return(nil)
+	ts.mockCartProvider.EXPECT().DeleteItemsByUserId(ctx, userId).Return(nil)
 	err := ts.cart.DeleteItemsByUserId(ctx, userId)
 	assert.NoError(ts.T(), err)
 }

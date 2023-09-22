@@ -16,9 +16,8 @@ import (
 type LomsTestSuite struct {
 	suite.Suite
 	mockCtrl           *gomock.Controller
-	mockOrderStorage   *services.MockOrdersStorage
-	mockStocksStorage  *services.MockStocksStorage
-	mockProductService *services.MockProductService
+	mockOrdersProvider *services.MockOrdersProvider
+	mockStocksProvider *services.MockStocksProvider
 	loms               Loms
 }
 
@@ -42,10 +41,9 @@ func (r Reporter) Fatalf(format string, args ...interface{}) {
 
 func (ts *LomsTestSuite) SetupSuite() {
 	ts.mockCtrl = gomock.NewController(Reporter{ts.T()})
-	ts.mockStocksStorage = services.NewMockStocksStorage(ts.mockCtrl)
-	ts.mockOrderStorage = services.NewMockOrdersStorage(ts.mockCtrl)
-	ts.mockProductService = services.NewMockProductService(ts.mockCtrl)
-	ts.loms = NewLomsService(ts.mockProductService, ts.mockOrderStorage, ts.mockStocksStorage)
+	ts.mockStocksProvider = services.NewMockStocksProvider(ts.mockCtrl)
+	ts.mockOrdersProvider = services.NewMockOrdersProvider(ts.mockCtrl)
+	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider)
 }
 
 func TestHandlersTestSuite(t *testing.T) {
@@ -78,9 +76,9 @@ func (ts *LomsTestSuite) TestCreateOrder() {
 		Status: models.OrderStatusAwaitingPayment,
 	}
 
-	ts.mockStocksStorage.EXPECT().Reserve(ctx, gomock.Any()).Return(nil)
-	ts.mockOrderStorage.EXPECT().Create(ctx, userId, gomock.Any(), orderItems).Return(newOrder, nil)
-	ts.mockOrderStorage.EXPECT().SetStatus(ctx, gomock.Any(), gomock.Any()).Return(awaitingOrder, nil)
+	ts.mockStocksProvider.EXPECT().Reserve(ctx, gomock.Any()).Return(nil)
+	ts.mockOrdersProvider.EXPECT().Create(ctx, userId, gomock.Any(), orderItems).Return(newOrder, nil)
+	ts.mockOrdersProvider.EXPECT().SetStatus(ctx, gomock.Any(), gomock.Any()).Return(awaitingOrder, nil)
 
 	order, err := ts.loms.OrderCreate(ctx, userId, orderItems)
 	assert.NoError(ts.T(), err)
@@ -113,9 +111,9 @@ func (ts *LomsTestSuite) TestCreateOrderInsufficientStocks() {
 		Status: models.OrderStatusFailed,
 	}
 
-	ts.mockOrderStorage.EXPECT().Create(ctx, userId, gomock.Any(), orderItems).Return(newOrder, nil)
-	ts.mockStocksStorage.EXPECT().Reserve(ctx, gomock.Any()).Return(ErrInsufficientStocks)
-	ts.mockOrderStorage.EXPECT().SetStatus(ctx, gomock.Any(), gomock.Any()).Return(failedOrder, nil)
+	ts.mockOrdersProvider.EXPECT().Create(ctx, userId, gomock.Any(), orderItems).Return(newOrder, nil)
+	ts.mockStocksProvider.EXPECT().Reserve(ctx, gomock.Any()).Return(ErrInsufficientStocks)
+	ts.mockOrdersProvider.EXPECT().SetStatus(ctx, gomock.Any(), gomock.Any()).Return(failedOrder, nil)
 
 	order, err := ts.loms.OrderCreate(ctx, userId, orderItems)
 	assert.ErrorIs(ts.T(), err, ErrInsufficientStocks)
@@ -141,7 +139,7 @@ func (ts *LomsTestSuite) TestGetOrderById() {
 		Status: models.OrderStatusNew,
 	}
 
-	ts.mockOrderStorage.EXPECT().GetOrderByOrderId(ctx, foundOrder.Id).Return(foundOrder, nil)
+	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(ctx, foundOrder.Id).Return(foundOrder, nil)
 
 	order, err := ts.loms.OrderInfo(ctx, foundOrder.Id)
 	assert.NoError(ts.T(), err)
@@ -152,7 +150,7 @@ func (ts *LomsTestSuite) TestGetOrderByIdNotFound() {
 	ctx := context.Background()
 	var orderId int64 = 1
 
-	ts.mockOrderStorage.EXPECT().GetOrderByOrderId(ctx, orderId).Return(models.Order{}, ErrOrderNotFound)
+	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(ctx, orderId).Return(models.Order{}, ErrOrderNotFound)
 
 	order, err := ts.loms.OrderInfo(ctx, orderId)
 	assert.ErrorIs(ts.T(), err, ErrOrderNotFound)

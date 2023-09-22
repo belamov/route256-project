@@ -24,15 +24,13 @@ var (
 	ErrOrderNotFound      = errors.New("order not found")
 )
 
-type ProductService interface{}
-
-type OrdersStorage interface {
+type OrdersProvider interface {
 	Create(ctx context.Context, userId int64, statusNew models.OrderStatus, items []models.OrderItem) (models.Order, error)
 	SetStatus(ctx context.Context, order models.Order, status models.OrderStatus) (models.Order, error)
 	GetOrderByOrderId(ctx context.Context, orderId int64) (models.Order, error)
 }
 
-type StocksStorage interface {
+type StocksProvider interface {
 	Reserve(ctx context.Context, order models.Order) error
 	ReserveRemove(ctx context.Context, order models.Order) error
 	ReserveCancel(ctx context.Context, order models.Order) error
@@ -40,34 +38,31 @@ type StocksStorage interface {
 }
 
 type lomsService struct {
-	productService ProductService
-	ordersStorage  OrdersStorage
-	stocksStorage  StocksStorage
+	ordersProvider OrdersProvider
+	stocksProvider StocksProvider
 }
 
 func NewLomsService(
-	productService ProductService,
-	ordersStorage OrdersStorage,
-	stocksStorage StocksStorage,
+	ordersStorage OrdersProvider,
+	stocksStorage StocksProvider,
 ) Loms {
 	return &lomsService{
-		productService: productService,
-		ordersStorage:  ordersStorage,
-		stocksStorage:  stocksStorage,
+		ordersProvider: ordersStorage,
+		stocksProvider: stocksStorage,
 	}
 }
 
 func (l *lomsService) OrderCreate(ctx context.Context, userId int64, items []models.OrderItem) (models.Order, error) {
-	order, err := l.ordersStorage.Create(ctx, userId, models.OrderStatusNew, items)
+	order, err := l.ordersProvider.Create(ctx, userId, models.OrderStatusNew, items)
 	if err != nil {
 		log.Err(err).
 			Msg("failed creating new order!")
 		return models.Order{}, fmt.Errorf("failed creating new order!: %w", err)
 	}
 
-	err = l.stocksStorage.Reserve(ctx, order)
+	err = l.stocksProvider.Reserve(ctx, order)
 	if err != nil {
-		failedOrder, errSetStatus := l.ordersStorage.SetStatus(ctx, order, models.OrderStatusFailed)
+		failedOrder, errSetStatus := l.ordersProvider.SetStatus(ctx, order, models.OrderStatusFailed)
 		if errSetStatus != nil {
 			log.Err(errSetStatus).
 				Int64("orderId", failedOrder.Id).
@@ -78,7 +73,7 @@ func (l *lomsService) OrderCreate(ctx context.Context, userId int64, items []mod
 		return models.Order{}, ErrInsufficientStocks
 	}
 
-	awaitingOrder, err := l.ordersStorage.SetStatus(ctx, order, models.OrderStatusAwaitingPayment)
+	awaitingOrder, err := l.ordersProvider.SetStatus(ctx, order, models.OrderStatusAwaitingPayment)
 	if err != nil {
 		log.Err(err).
 			Int64("orderId", awaitingOrder.Id).
@@ -90,7 +85,7 @@ func (l *lomsService) OrderCreate(ctx context.Context, userId int64, items []mod
 }
 
 func (l *lomsService) OrderInfo(ctx context.Context, orderId int64) (models.Order, error) {
-	order, err := l.ordersStorage.GetOrderByOrderId(ctx, orderId)
+	order, err := l.ordersProvider.GetOrderByOrderId(ctx, orderId)
 	if errors.Is(err, storage.ErrOrderNotFound) {
 		return models.Order{}, ErrOrderNotFound
 	}
@@ -105,7 +100,7 @@ func (l *lomsService) OrderInfo(ctx context.Context, orderId int64) (models.Orde
 }
 
 func (l *lomsService) OrderPay(ctx context.Context, orderId int64) error {
-	order, err := l.ordersStorage.GetOrderByOrderId(ctx, orderId)
+	order, err := l.ordersProvider.GetOrderByOrderId(ctx, orderId)
 	if errors.Is(err, storage.ErrOrderNotFound) {
 		return ErrOrderNotFound
 	}
@@ -116,7 +111,7 @@ func (l *lomsService) OrderPay(ctx context.Context, orderId int64) error {
 		return fmt.Errorf("failed getting order!: %w", err)
 	}
 
-	err = l.stocksStorage.ReserveRemove(ctx, order)
+	err = l.stocksProvider.ReserveRemove(ctx, order)
 	if err != nil {
 		log.Err(err).
 			Any("orderId", orderId).
@@ -124,7 +119,7 @@ func (l *lomsService) OrderPay(ctx context.Context, orderId int64) error {
 		return fmt.Errorf("failed removing reserve!: %w", err)
 	}
 
-	_, err = l.ordersStorage.SetStatus(ctx, order, models.OrderStatusPayed)
+	_, err = l.ordersProvider.SetStatus(ctx, order, models.OrderStatusPayed)
 	if err != nil {
 		log.Err(err).
 			Any("orderId", orderId).
@@ -136,7 +131,7 @@ func (l *lomsService) OrderPay(ctx context.Context, orderId int64) error {
 }
 
 func (l *lomsService) OrderCancel(ctx context.Context, orderId int64) error {
-	order, err := l.ordersStorage.GetOrderByOrderId(ctx, orderId)
+	order, err := l.ordersProvider.GetOrderByOrderId(ctx, orderId)
 	if errors.Is(err, storage.ErrOrderNotFound) {
 		return ErrOrderNotFound
 	}
@@ -147,7 +142,7 @@ func (l *lomsService) OrderCancel(ctx context.Context, orderId int64) error {
 		return fmt.Errorf("failed getting order!: %w", err)
 	}
 
-	err = l.stocksStorage.ReserveCancel(ctx, order)
+	err = l.stocksProvider.ReserveCancel(ctx, order)
 	if err != nil {
 		log.Err(err).
 			Any("orderId", orderId).
@@ -155,7 +150,7 @@ func (l *lomsService) OrderCancel(ctx context.Context, orderId int64) error {
 		return fmt.Errorf("failed canceling reserve!: %w", err)
 	}
 
-	_, err = l.ordersStorage.SetStatus(ctx, order, models.OrderStatusCancelled)
+	_, err = l.ordersProvider.SetStatus(ctx, order, models.OrderStatusCancelled)
 	if err != nil {
 		log.Err(err).
 			Any("orderId", orderId).
@@ -167,7 +162,7 @@ func (l *lomsService) OrderCancel(ctx context.Context, orderId int64) error {
 }
 
 func (l *lomsService) StockInfo(ctx context.Context, sku uint32) (uint64, error) {
-	count, err := l.stocksStorage.GetBySku(ctx, sku)
+	count, err := l.stocksProvider.GetBySku(ctx, sku)
 	if err != nil {
 		return 0, err
 	}
