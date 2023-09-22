@@ -49,7 +49,7 @@ func (ts *CartTestSuite) SetupSuite() {
 	ts.cart = NewCartService(ts.mockProductService, ts.mockLomsService, ts.mockCartProvider)
 }
 
-func TestHandlersTestSuite(t *testing.T) {
+func TestCartTestSuite(t *testing.T) {
 	suite.Run(t, new(CartTestSuite))
 }
 

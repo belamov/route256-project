@@ -46,7 +46,7 @@ func (ts *LomsTestSuite) SetupSuite() {
 	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider)
 }
 
-func TestHandlersTestSuite(t *testing.T) {
+func TestLomsTestSuite(t *testing.T) {
 	suite.Run(t, new(LomsTestSuite))
 }
 
