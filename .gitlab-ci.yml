@@ -1,0 +1,53 @@
+image: golang:1.21
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'push'
+
+stages:
+  - cart
+  - loms
+
+test cart:
+  stage: cart
+  script:
+    - cd cart
+    - go vet ./...
+    - go test -v -race ./...
+
+
+lint cart:
+  stage: cart
+  image: golangci/golangci-lint:v1.54.2
+  script:
+    - cd cart
+    - golangci-lint run -v
+
+fmt cart:
+  stage: cart
+  script:
+    - go install mvdan.cc/gofumpt@latest
+    - cd cart
+    - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
+
+test loms:
+  stage: loms
+  script:
+    - cd loms
+    - go vet ./...
+    - go test -v -race ./...
+
+lint loms:
+  stage: loms
+  image: golangci/golangci-lint:v1.54.2
+  script:
+    - cd cart
+    - golangci-lint run -v
+
+fmt loms:
+  stage: loms
+  script:
+    - go install mvdan.cc/gofumpt@latest
+    - cd loms
+    - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
