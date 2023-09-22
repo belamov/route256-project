@@ -43,12 +43,12 @@ type lomsService struct {
 }
 
 func NewLomsService(
-	ordersStorage OrdersProvider,
-	stocksStorage StocksProvider,
+	ordersProvider OrdersProvider,
+	stocksProvider StocksProvider,
 ) Loms {
 	return &lomsService{
-		ordersProvider: ordersStorage,
-		stocksProvider: stocksStorage,
+		ordersProvider: ordersProvider,
+		stocksProvider: stocksProvider,
 	}
 }
 

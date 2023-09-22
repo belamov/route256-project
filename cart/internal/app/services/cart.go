@@ -49,12 +49,12 @@ type cart struct {
 func NewCartService(
 	productService ProductService,
 	lomsService LomsService,
-	cartStorage CartProvider,
+	cartProvider CartProvider,
 ) Cart {
 	return &cart{
 		productService: productService,
 		lomsService:    lomsService,
-		cartProvider:   cartStorage,
+		cartProvider:   cartProvider,
 	}
 }
 
