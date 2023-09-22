@@ -20,7 +20,7 @@ type ListItemResponse struct {
 	Name  string `json:"name,omitempty"`
 	Sku   uint32 `json:"sku,omitempty"`
 	Price uint32 `json:"price,omitempty"`
-	Count uint16 `json:"count,omitempty"`
+	Count uint64 `json:"count,omitempty"`
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {

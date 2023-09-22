@@ -29,7 +29,7 @@ type ProductService interface {
 }
 
 type LomsService interface {
-	GetStocksInfo(ctx context.Context, sku uint32) (uint16, error)
+	GetStocksInfo(ctx context.Context, sku uint32) (uint64, error)
 	CreateOrder(ctx context.Context, userId int64, items []models.CartItem) (int64, error)
 }
 

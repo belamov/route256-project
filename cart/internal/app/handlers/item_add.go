@@ -12,7 +12,7 @@ import (
 type ItemAddRequest struct {
 	UserId int64
 	Sku    uint32
-	Count  uint16
+	Count  uint64
 }
 
 func (h *Handler) AddItem(w http.ResponseWriter, r *http.Request) {

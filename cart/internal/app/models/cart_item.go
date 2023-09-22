@@ -3,7 +3,7 @@ package models
 type CartItem struct {
 	User  int64
 	Sku   uint32
-	Count uint16
+	Count uint64
 }
 
 type CartItemWithInfo struct {
@@ -11,7 +11,7 @@ type CartItemWithInfo struct {
 	User  int64
 	Sku   uint32
 	Price uint32
-	Count uint16
+	Count uint64
 }
 
 type CartItemInfo struct {

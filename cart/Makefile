@@ -2,7 +2,7 @@ curdir=$(shell pwd)
 docker_bin := $(shell command -v docker 2> /dev/null)
 app := route256/cart
 
-check: build fieldaligment-fix gofumpt lint mock test
+check: build fieldaligment-fix gofumpt lint test
 
 build:
 	$(docker_bin) build -t $(app) .

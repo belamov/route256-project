@@ -55,10 +55,10 @@ func (mr *MockLomsServiceMockRecorder) CreateOrder(arg0, arg1, arg2 any) *gomock
 }
 
 // GetStocksInfo mocks base method.
-func (m *MockLomsService) GetStocksInfo(arg0 context.Context, arg1 uint32) (uint16, error) {
+func (m *MockLomsService) GetStocksInfo(arg0 context.Context, arg1 uint32) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStocksInfo", arg0, arg1)
-	ret0, _ := ret[0].(uint16)
+	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
