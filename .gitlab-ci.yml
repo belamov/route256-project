@@ -6,11 +6,11 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == 'push'
 
 stages:
-  - cart
-  - loms
+  - check
+  - build
 
 test cart:
-  stage: cart
+  stage: check
   script:
     - cd cart
     - go vet ./...
@@ -18,36 +18,47 @@ test cart:
 
 
 lint cart:
-  stage: cart
+  stage: check
   image: golangci/golangci-lint:v1.54.2
   script:
     - cd cart
     - golangci-lint run -v
 
 fmt cart:
-  stage: cart
+  stage: check
   script:
     - go install mvdan.cc/gofumpt@latest
     - cd cart
     - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
 
 test loms:
-  stage: loms
+  stage: check
   script:
     - cd loms
     - go vet ./...
     - go test -v -race ./...
 
 lint loms:
-  stage: loms
+  stage: check
   image: golangci/golangci-lint:v1.54.2
   script:
     - cd cart
     - golangci-lint run -v
 
 fmt loms:
-  stage: loms
+  stage: check
   script:
     - go install mvdan.cc/gofumpt@latest
     - cd loms
     - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
+
+build cart:
+  stage: build
+  script:
+    - go build ./cart/cmd/app
+
+
+build loms:
+  stage: build
+  script:
+    - go build ./loms/cmd/app
