@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/rs/zerolog/log"
@@ -9,6 +10,14 @@ import (
 
 type StockInfoRequest struct {
 	Sku uint32 `json:"sku,omitempty"`
+}
+
+func (r *StockInfoRequest) Validate() error {
+	if r.Sku == 0 {
+		return errors.New("sku is required")
+	}
+
+	return nil
 }
 
 type StockInfoResponse struct {
@@ -19,6 +28,12 @@ func (h *Handler) StockInfo(w http.ResponseWriter, r *http.Request) {
 	var req StockInfoRequest
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err := req.Validate()
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

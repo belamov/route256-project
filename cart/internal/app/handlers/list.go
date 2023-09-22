@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/rs/zerolog/log"
@@ -9,6 +10,14 @@ import (
 
 type ListRequest struct {
 	UserId int64
+}
+
+func (r *ListRequest) Validate() error {
+	if r.UserId == 0 {
+		return errors.New("user is required")
+	}
+
+	return nil
 }
 
 type ListResponse struct {
@@ -27,6 +36,12 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	var req ListRequest
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err := req.Validate()
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

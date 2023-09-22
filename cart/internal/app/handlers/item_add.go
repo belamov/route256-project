@@ -10,9 +10,25 @@ import (
 )
 
 type ItemAddRequest struct {
-	UserId int64
-	Sku    uint32
-	Count  uint64
+	UserId int64  `json:"user,omitempty"`
+	Sku    uint32 `json:"sku,omitempty"`
+	Count  uint64 `json:"count,omitempty"`
+}
+
+func (r *ItemAddRequest) Validate() error {
+	if r.UserId == 0 {
+		return errors.New("user is required")
+	}
+
+	if r.Sku == 0 {
+		return errors.New("sku is required")
+	}
+
+	if r.Count <= 0 {
+		return errors.New("count must be greater than 0")
+	}
+
+	return nil
 }
 
 func (h *Handler) AddItem(w http.ResponseWriter, r *http.Request) {
@@ -23,12 +39,18 @@ func (h *Handler) AddItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err := req.Validate()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	item := models.CartItem{
 		User:  req.UserId,
 		Sku:   req.Sku,
 		Count: req.Count,
 	}
-	err := h.cart.AddItem(r.Context(), item)
+	err = h.cart.AddItem(r.Context(), item)
 	if errors.Is(err, services.ErrItemInvalid) || errors.Is(err, services.ErrSkuInvalid) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

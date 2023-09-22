@@ -11,7 +11,15 @@ import (
 )
 
 type CheckoutRequest struct {
-	UserId int64
+	UserId int64 `json:"user,omitempty"`
+}
+
+func (r *CheckoutRequest) Validate() error {
+	if r.UserId == 0 {
+		return errors.New("user is required")
+	}
+
+	return nil
 }
 
 type CheckoutResponse struct {
@@ -22,6 +30,12 @@ func (h *Handler) Checkout(w http.ResponseWriter, r *http.Request) {
 	var req CheckoutRequest
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err := req.Validate()
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

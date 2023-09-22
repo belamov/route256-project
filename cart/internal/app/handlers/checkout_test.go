@@ -15,7 +15,7 @@ import (
 
 func (s *HandlersTestSuite) TestHandler_Checkout() {
 	var userId int64 = 1
-	req := ListRequest{
+	req := CheckoutRequest{
 		UserId: userId,
 	}
 
@@ -45,7 +45,7 @@ func (s *HandlersTestSuite) TestHandler_Checkout() {
 
 func (s *HandlersTestSuite) TestHandler_CheckoutEmptyCart() {
 	var userId int64 = 1
-	req := ListRequest{
+	req := CheckoutRequest{
 		UserId: userId,
 	}
 

@@ -21,6 +21,24 @@ type OrderItemRequest struct {
 	Count uint16 `json:"count,omitempty"`
 }
 
+func (r *CreateOrderRequest) Validate() error {
+	if r.UserId == 0 {
+		return errors.New("userId is required")
+	}
+
+	for _, item := range r.Items {
+		if item.Count <= 0 {
+			return errors.New("items.count must be greater than 0")
+		}
+
+		if item.Sku == 0 {
+			return errors.New("items.sku is required")
+		}
+	}
+
+	return nil
+}
+
 type CreateOrderResponse struct {
 	OrderId int64 `json:"orderID,omitempty"`
 }
@@ -29,6 +47,12 @@ func (h *Handler) OrderCreate(w http.ResponseWriter, r *http.Request) {
 	var req CreateOrderRequest
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err := req.Validate()
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

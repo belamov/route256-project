@@ -12,7 +12,7 @@ import (
 
 func (s *HandlersTestSuite) TestHandler_Clear() {
 	var userId int64 = 1
-	req := ListRequest{
+	req := ClearRequest{
 		UserId: userId,
 	}
 
