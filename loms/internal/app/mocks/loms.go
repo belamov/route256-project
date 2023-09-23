@@ -12,6 +12,8 @@ import (
 	context "context"
 	reflect "reflect"
 	models "route256/loms/internal/app/models"
+	sync "sync"
+	time "time"
 
 	gomock "go.uber.org/mock/gomock"
 )
@@ -95,6 +97,18 @@ func (m *MockLoms) OrderPay(arg0 context.Context, arg1 int64) error {
 func (mr *MockLomsMockRecorder) OrderPay(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OrderPay", reflect.TypeOf((*MockLoms)(nil).OrderPay), arg0, arg1)
+}
+
+// RunCancelUnpaidOrders mocks base method.
+func (m *MockLoms) RunCancelUnpaidOrders(arg0 context.Context, arg1 *sync.WaitGroup, arg2 time.Duration) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RunCancelUnpaidOrders", arg0, arg1, arg2)
+}
+
+// RunCancelUnpaidOrders indicates an expected call of RunCancelUnpaidOrders.
+func (mr *MockLomsMockRecorder) RunCancelUnpaidOrders(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCancelUnpaidOrders", reflect.TypeOf((*MockLoms)(nil).RunCancelUnpaidOrders), arg0, arg1, arg2)
 }
 
 // StockInfo mocks base method.

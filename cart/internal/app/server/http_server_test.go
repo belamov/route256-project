@@ -1,10 +1,14 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -24,6 +28,9 @@ func TestHTTPServer_Run(t *testing.T) {
 	serverAddress := fmt.Sprintf("0.0.0.0:%d", port)
 	server := NewHTTPServer(serverAddress, mockService)
 
+	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
 	done := make(chan struct{})
 	go func() {
 		<-done
@@ -31,16 +38,10 @@ func TestHTTPServer_Run(t *testing.T) {
 		require.NoError(t, e)
 	}()
 
-	finished := make(chan struct{})
-	go func() {
-		server.Run()
-		close(finished)
-	}()
-
-	// defer cleanup because require check below can fail
+	go server.Run(ctx, wg)
 	defer func() {
 		close(done)
-		<-finished
+		wg.Wait()
 	}()
 
 	waitForHTTPServerStart(port)

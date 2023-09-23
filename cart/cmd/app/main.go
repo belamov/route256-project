@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
 	"os"
+	"os/signal"
+	"sync"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -24,5 +27,13 @@ func main() {
 	config := app.BuildServerConfig()
 
 	srv := server.NewHTTPServer(config.Address, cartService)
-	srv.Run()
+
+	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
+	wg := &sync.WaitGroup{}
+
+	wg.Add(2)
+
+	srv.Run(ctx, wg)
+	wg.Done()
+	log.Info().Msg("goodbye")
 }

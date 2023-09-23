@@ -39,6 +39,20 @@ func (m *MockOrdersProvider) EXPECT() *MockOrdersProviderMockRecorder {
 	return m.recorder
 }
 
+// CancelUnpaidOrders mocks base method.
+func (m *MockOrdersProvider) CancelUnpaidOrders(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CancelUnpaidOrders", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CancelUnpaidOrders indicates an expected call of CancelUnpaidOrders.
+func (mr *MockOrdersProviderMockRecorder) CancelUnpaidOrders(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelUnpaidOrders", reflect.TypeOf((*MockOrdersProvider)(nil).CancelUnpaidOrders), arg0)
+}
+
 // Create mocks base method.
 func (m *MockOrdersProvider) Create(arg0 context.Context, arg1 int64, arg2 models.OrderStatus, arg3 []models.OrderItem) (models.Order, error) {
 	m.ctrl.T.Helper()

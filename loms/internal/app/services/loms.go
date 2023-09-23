@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+	"time"
 
 	"route256/loms/internal/app/storage"
 
@@ -12,7 +14,6 @@ import (
 )
 
 // TODO:
-// - отмена заказа после 10 минут неуплаты
 // - валидация смены статусов заказа
 type Loms interface {
 	OrderCreate(ctx context.Context, userId int64, items []models.OrderItem) (models.Order, error)
@@ -20,6 +21,7 @@ type Loms interface {
 	OrderPay(ctx context.Context, orderId int64) error
 	OrderCancel(ctx context.Context, orderId int64) error
 	StockInfo(ctx context.Context, sku uint32) (uint64, error)
+	RunCancelUnpaidOrders(ctx context.Context, wg *sync.WaitGroup, period time.Duration)
 }
 
 var (
@@ -31,6 +33,7 @@ type OrdersProvider interface {
 	Create(ctx context.Context, userId int64, statusNew models.OrderStatus, items []models.OrderItem) (models.Order, error)
 	SetStatus(ctx context.Context, order models.Order, status models.OrderStatus) (models.Order, error)
 	GetOrderByOrderId(ctx context.Context, orderId int64) (models.Order, error)
+	CancelUnpaidOrders(ctx context.Context) error
 }
 
 type StocksProvider interface {
@@ -171,4 +174,25 @@ func (l *lomsService) StockInfo(ctx context.Context, sku uint32) (uint64, error)
 	}
 
 	return count, nil
+}
+
+func (l *lomsService) RunCancelUnpaidOrders(ctx context.Context, wg *sync.WaitGroup, period time.Duration) {
+	ticker := time.NewTicker(period)
+	log.Info().Msg("Starting canceling unpaid orders")
+	for {
+		select {
+		case <-ctx.Done():
+			ticker.Stop()
+			log.Info().Msg("Stopped canceling unpaid orders")
+			wg.Done()
+			return
+
+		case <-ticker.C:
+			log.Info().Msg("Cancelling unpaid orders")
+			err := l.ordersProvider.CancelUnpaidOrders(ctx)
+			if err != nil {
+				log.Err(err).Msg("failed to cancel unpaid orders")
+			}
+		}
+	}
 }
