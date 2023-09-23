@@ -1,4 +1,4 @@
-package services
+package http_clients
 
 import (
 	"bytes"
@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"time"
 
+	"route256/cart/internal/app/services"
+
 	"github.com/rs/zerolog/log"
 
 	"route256/cart/internal/app/models"
@@ -20,7 +22,7 @@ type productHttpClient struct {
 	serviceUrl string
 }
 
-func NewProductHttpClient(serviceUrl string) ProductService {
+func NewProductHttpClient(serviceUrl string) services.ProductService {
 	// TODO: make configurable via env
 	defaultTimeout := time.Second * 3
 	httpClient := &http.Client{
@@ -74,7 +76,7 @@ func (p *productHttpClient) GetProduct(ctx context.Context, sku uint32) (models.
 	}
 
 	if response.StatusCode == http.StatusNotFound {
-		return models.CartItemInfo{}, ErrSkuInvalid
+		return models.CartItemInfo{}, services.ErrSkuInvalid
 	}
 
 	respBody, err := io.ReadAll(response.Body)

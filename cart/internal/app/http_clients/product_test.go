@@ -1,8 +1,10 @@
-package services
+package http_clients
 
 import (
 	"context"
 	"testing"
+
+	"route256/cart/internal/app/services"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -18,5 +20,5 @@ func Test_productHttpClient_GetProduct(t *testing.T) {
 	assert.Equal(t, product.Price, uint32(2202))
 
 	_, err = client.GetProduct(ctx, 1)
-	assert.ErrorIs(t, err, ErrSkuInvalid)
+	assert.ErrorIs(t, err, services.ErrSkuInvalid)
 }

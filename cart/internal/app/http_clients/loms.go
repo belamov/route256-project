@@ -1,4 +1,4 @@
-package services
+package http_clients
 
 import (
 	"bytes"
@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"time"
 
+	"route256/cart/internal/app/services"
+
 	"github.com/rs/zerolog/log"
 
 	"route256/cart/internal/app/models"
@@ -20,7 +22,7 @@ type lomsHttpClient struct {
 	serviceUrl string
 }
 
-func NewLomsHttpClient(serviceUrl string) LomsService {
+func NewLomsHttpClient(serviceUrl string) services.LomsService {
 	// TODO: make configurable via env
 	defaultTimeout := time.Second * 3
 	httpClient := &http.Client{
@@ -71,7 +73,7 @@ func (l *lomsHttpClient) GetStocksInfo(ctx context.Context, sku uint32) (uint64,
 	}
 
 	if response.StatusCode == http.StatusNotFound {
-		return 0, ErrSkuInvalid
+		return 0, services.ErrSkuInvalid
 	}
 
 	respBody, err := io.ReadAll(response.Body)
