@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"route256/cart/internal/app/mocks"
+	"route256/cart/internal/app/domain/services"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

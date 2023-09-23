@@ -10,14 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
-	services "route256/loms/internal/app/mocks"
 )
 
 type LomsTestSuite struct {
 	suite.Suite
 	mockCtrl           *gomock.Controller
-	mockOrdersProvider *services.MockOrdersProvider
-	mockStocksProvider *services.MockStocksProvider
+	mockOrdersProvider *MockOrdersProvider
+	mockStocksProvider *MockStocksProvider
 	loms               Loms
 }
 
@@ -41,8 +40,8 @@ func (r Reporter) Fatalf(format string, args ...interface{}) {
 
 func (ts *LomsTestSuite) SetupSuite() {
 	ts.mockCtrl = gomock.NewController(Reporter{ts.T()})
-	ts.mockStocksProvider = services.NewMockStocksProvider(ts.mockCtrl)
-	ts.mockOrdersProvider = services.NewMockOrdersProvider(ts.mockCtrl)
+	ts.mockStocksProvider = NewMockStocksProvider(ts.mockCtrl)
+	ts.mockOrdersProvider = NewMockOrdersProvider(ts.mockCtrl)
 	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider)
 }
 

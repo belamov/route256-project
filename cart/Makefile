@@ -21,9 +21,9 @@ fieldaligment-fix:
 
 mock:
 	rm -f internal/app/mocks/*
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/cart.go -package=services route256/cart/internal/app/domain/services Cart
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/cart_provider.go -package=services route256/cart/internal/app/domain/services CartProvider
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/product.go -package=services route256/cart/internal/app/domain/services ProductService
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/loms.go -package=services route256/cart/internal/app/domain/services LomsService
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/domain/services/cart_mock.go -package=services route256/cart/internal/app/domain/services Cart
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/domain/services/cart_provider_mock.go -package=services route256/cart/internal/app/domain/services CartProvider
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/domain/services/product_mock.go -package=services route256/cart/internal/app/domain/services ProductService
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/domain/services/loms_mock.go -package=services route256/cart/internal/app/domain/services LomsService
 
 

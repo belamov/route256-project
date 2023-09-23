@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	services "route256/loms/internal/app/mocks"
+	"route256/loms/internal/app/domain/services"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

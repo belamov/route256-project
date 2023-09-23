@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	services "route256/cart/internal/app/mocks"
+	"route256/cart/internal/app/domain/services"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"route256/cart/internal/app"
-	mocks "route256/cart/internal/app/mocks"
 	"route256/cart/internal/app/server"
 )
 
@@ -24,7 +23,7 @@ func main() {
 	productService := http_clients.NewProductHttpClient("http://route256.pavl.uk:8080/get_product")
 	lomsService := http_clients.NewLomsHttpClient("http://localhost:8083")
 	// TODO: replace mock with real provider
-	cartProvider := mocks.NewMockCartProvider(nil)
+	cartProvider := services.NewMockCartProvider(nil)
 	cartService := services.NewCartService(productService, lomsService, cartProvider)
 
 	config := app.BuildServerConfig()

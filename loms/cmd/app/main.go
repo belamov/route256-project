@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"route256/loms/internal/app"
-	mocks "route256/loms/internal/app/mocks"
 	"route256/loms/internal/app/server"
 )
 
@@ -42,7 +41,7 @@ func (n NullOrderProvider) CancelUnpaidOrders(ctx context.Context) error {
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Caller().Logger()
 
-	stocksProvider := mocks.NewMockStocksProvider(nil)
+	stocksProvider := services.NewMockStocksProvider(nil)
 	lomsService := services.NewLomsService(NullOrderProvider{}, stocksProvider)
 
 	config := app.BuildServerConfig()

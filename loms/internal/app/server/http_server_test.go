@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	services "route256/loms/internal/app/mocks"
+	"route256/loms/internal/app/domain/services"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

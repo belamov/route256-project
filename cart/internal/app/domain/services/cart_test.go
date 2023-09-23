@@ -12,15 +12,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
-	services "route256/cart/internal/app/mocks"
 )
 
 type CartTestSuite struct {
 	suite.Suite
 	mockCtrl           *gomock.Controller
-	mockCartProvider   *services.MockCartProvider
-	mockLomsService    *services.MockLomsService
-	mockProductService *services.MockProductService
+	mockCartProvider   *MockCartProvider
+	mockLomsService    *MockLomsService
+	mockProductService *MockProductService
 	cart               Cart
 }
 
@@ -44,9 +43,9 @@ func (r Reporter) Fatalf(format string, args ...interface{}) {
 
 func (ts *CartTestSuite) SetupSuite() {
 	ts.mockCtrl = gomock.NewController(Reporter{ts.T()})
-	ts.mockCartProvider = services.NewMockCartProvider(ts.mockCtrl)
-	ts.mockLomsService = services.NewMockLomsService(ts.mockCtrl)
-	ts.mockProductService = services.NewMockProductService(ts.mockCtrl)
+	ts.mockCartProvider = NewMockCartProvider(ts.mockCtrl)
+	ts.mockLomsService = NewMockLomsService(ts.mockCtrl)
+	ts.mockProductService = NewMockProductService(ts.mockCtrl)
 	ts.cart = NewCartService(ts.mockProductService, ts.mockLomsService, ts.mockCartProvider)
 }
 
