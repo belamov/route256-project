@@ -10,10 +10,9 @@ package services
 
 import (
 	context "context"
-	reflect "reflect"
-	models "route256/cart/internal/app/models"
-
 	gomock "go.uber.org/mock/gomock"
+	reflect "reflect"
+	"route256/cart/internal/app/domain/models"
 )
 
 // MockCartProvider is a mock of CartProvider interface.

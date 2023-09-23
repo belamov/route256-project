@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"sync"
 
+	"route256/cart/internal/app/domain/services"
+
 	"route256/cart/internal/app/http_clients"
 
 	"github.com/rs/zerolog"
@@ -14,7 +16,6 @@ import (
 	"route256/cart/internal/app"
 	mocks "route256/cart/internal/app/mocks"
 	"route256/cart/internal/app/server"
-	"route256/cart/internal/app/services"
 )
 
 func main() {

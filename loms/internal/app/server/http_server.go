@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"route256/loms/internal/app/handlers"
-	"route256/loms/internal/app/services"
+	"route256/loms/internal/app/domain/services"
 
 	"github.com/rs/zerolog/log"
+	"route256/loms/internal/app/handlers"
 )
 
 type HTTPServer struct {

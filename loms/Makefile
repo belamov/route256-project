@@ -21,8 +21,8 @@ fieldaligment-fix:
 
 mock:
 	rm -f internal/app/mocks/*
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/loms.go -package=services route256/loms/internal/app/services Loms
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/orders.go -package=services route256/loms/internal/app/services OrdersProvider
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/stock.go -package=services route256/loms/internal/app/services StocksProvider
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/loms.go -package=services route256/loms/internal/app/domain/services Loms
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/orders.go -package=services route256/loms/internal/app/domain/services OrdersProvider
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/mocks/stock.go -package=services route256/loms/internal/app/domain/services StocksProvider
 
 

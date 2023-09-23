@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"route256/cart/internal/app/domain/models"
+	"route256/cart/internal/app/domain/services"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-
-	"route256/cart/internal/app/models"
-	"route256/cart/internal/app/services"
 )
 
 func (s *HandlersTestSuite) TestHandler_AddItem() {

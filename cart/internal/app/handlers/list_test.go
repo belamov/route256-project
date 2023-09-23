@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/stretchr/testify/assert"
+	"route256/cart/internal/app/domain/models"
 
-	"route256/cart/internal/app/models"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"

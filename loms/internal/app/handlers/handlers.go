@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"route256/loms/internal/app/services"
+	"route256/loms/internal/app/domain/services"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"

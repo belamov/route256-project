@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"route256/cart/internal/app/domain/models"
+
 	"github.com/rs/zerolog/log"
-	"route256/cart/internal/app/models"
 )
 
 type Cart interface {

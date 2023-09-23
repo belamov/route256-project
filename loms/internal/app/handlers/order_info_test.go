@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"route256/loms/internal/app/services"
+	"route256/loms/internal/app/domain/models"
+	"route256/loms/internal/app/domain/services"
 
 	"github.com/stretchr/testify/assert"
-	"route256/loms/internal/app/models"
-
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

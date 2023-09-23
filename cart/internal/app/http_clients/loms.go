@@ -10,11 +10,10 @@ import (
 	"net/url"
 	"time"
 
-	"route256/cart/internal/app/services"
+	"route256/cart/internal/app/domain/models"
+	"route256/cart/internal/app/domain/services"
 
 	"github.com/rs/zerolog/log"
-
-	"route256/cart/internal/app/models"
 )
 
 type lomsHttpClient struct {

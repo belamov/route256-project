@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	services "route256/loms/internal/app/mocks"
-	"route256/loms/internal/app/models"
+	"route256/loms/internal/app/domain/models"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
+	services "route256/loms/internal/app/mocks"
 )
 
 type LomsTestSuite struct {

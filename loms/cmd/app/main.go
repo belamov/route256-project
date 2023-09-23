@@ -7,7 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"route256/loms/internal/app/models"
+	"route256/loms/internal/app/domain/models"
+	"route256/loms/internal/app/domain/services"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -15,7 +16,6 @@ import (
 	"route256/loms/internal/app"
 	mocks "route256/loms/internal/app/mocks"
 	"route256/loms/internal/app/server"
-	"route256/loms/internal/app/services"
 )
 
 type NullOrderProvider struct{}

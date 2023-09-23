@@ -7,11 +7,12 @@ import (
 	"strconv"
 	"testing"
 
+	"route256/cart/internal/app/domain/models"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 	services "route256/cart/internal/app/mocks"
-	"route256/cart/internal/app/models"
 )
 
 type CartTestSuite struct {
