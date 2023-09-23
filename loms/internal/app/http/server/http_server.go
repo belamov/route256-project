@@ -7,17 +7,18 @@ import (
 	"sync"
 	"time"
 
-	"route256/cart/internal/app/domain/services"
+	"route256/loms/internal/app/http/handlers"
+
+	"route256/loms/internal/app/domain/services"
 
 	"github.com/rs/zerolog/log"
-	"route256/cart/internal/app/handlers"
 )
 
 type HTTPServer struct {
 	server *http.Server
 }
 
-func NewHTTPServer(addr string, service services.Cart) *HTTPServer {
+func NewHTTPServer(addr string, service services.Loms) *HTTPServer {
 	return &HTTPServer{
 		server: &http.Server{
 			Addr:              addr,

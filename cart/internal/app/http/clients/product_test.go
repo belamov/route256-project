@@ -1,4 +1,4 @@
-package http_clients
+package clients
 
 import (
 	"context"
