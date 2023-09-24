@@ -3,7 +3,9 @@ package services
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
+	"time"
 
 	"route256/loms/internal/app/domain/models"
 
@@ -154,4 +156,27 @@ func (ts *LomsTestSuite) TestGetOrderByIdNotFound() {
 	order, err := ts.loms.OrderInfo(ctx, orderId)
 	assert.ErrorIs(ts.T(), err, ErrOrderNotFound)
 	assert.Empty(ts.T(), order)
+}
+
+func (ts *LomsTestSuite) TestRunCancelUnpaidOrders() {
+	ctx, cancel := context.WithCancel(context.Background())
+	var orderId int64 = 1
+
+	orderToCancel := models.Order{Id: orderId, Status: models.OrderStatusAwaitingPayment}
+
+	ts.mockOrdersProvider.EXPECT().
+		GetOrdersIdsByCreatedAtAndStatus(gomock.Any(), gomock.Any(), gomock.Any()).
+		AnyTimes().
+		Return([]int64{orderId}, nil)
+	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(gomock.Any(), orderId).AnyTimes().Return(orderToCancel, nil)
+	ts.mockStocksProvider.EXPECT().ReserveCancel(gomock.Any(), orderToCancel).AnyTimes().Return(nil)
+	ts.mockOrdersProvider.EXPECT().SetStatus(gomock.Any(), orderToCancel, gomock.Any()).AnyTimes().Return(orderToCancel, nil)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go ts.loms.RunCancelUnpaidOrders(ctx, wg, time.Millisecond)
+
+	time.Sleep(time.Millisecond * 5)
+	cancel()
+	wg.Wait()
 }
