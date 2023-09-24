@@ -1,34 +1,39 @@
 package app
 
 import (
-	"flag"
-	"os"
+	"fmt"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
+	"github.com/rs/zerolog/log"
 )
 
-type ServerConfig struct {
-	Address                    string
-	AllowedOrderUnpaidTime     time.Duration
-	CancelUnpaidOrdersInterval time.Duration
+type Config struct {
+	ServerAddress              string        `default:"0.0.0.0:8080"`
+	AllowedOrderUnpaidTime     time.Duration `default:"1m"`
+	CancelUnpaidOrdersInterval time.Duration `default:"10m"`
 }
 
-func BuildServerConfig() *ServerConfig {
-	defaultAddress := "0.0.0.0:8080"
-	flag.Parse()
+func BuildConfig() *Config {
+	var config Config
 
-	cfg := &ServerConfig{
-		Address:                    coalesceStrings(os.Getenv("ADDRESS"), defaultAddress),
-		CancelUnpaidOrdersInterval: time.Second,
+	err := envconfig.Process("loms", &config)
+	if err != nil {
+		log.Panic().Err(err).Msg("cant build config")
 	}
 
-	return cfg
+	log.Info().Msg("App config:\n" + config.String())
+
+	return &config
 }
 
-func coalesceStrings(strings ...string) string {
-	for _, str := range strings {
-		if str != "" {
-			return str
-		}
-	}
-	return ""
+func (config Config) String() string {
+	return fmt.Sprintf(
+		"ServerAddress: %v\n"+
+			"AllowedOrderUnpaidTime: %v\n"+
+			"CancelUnpaidOrdersInterval: %v\n",
+		config.ServerAddress,
+		config.AllowedOrderUnpaidTime,
+		config.CancelUnpaidOrdersInterval,
+	)
 }

@@ -46,12 +46,12 @@ func (n NullOrderProvider) CancelUnpaidOrders(ctx context.Context) error {
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Caller().Logger()
 
-	config := app.BuildServerConfig()
+	config := app.BuildConfig()
 
 	stocksProvider := services.NewMockStocksProvider(nil)
 	lomsService := services.NewLomsService(NullOrderProvider{}, stocksProvider, config.AllowedOrderUnpaidTime)
 
-	srv := server.NewHTTPServer(config.Address, lomsService)
+	srv := server.NewHTTPServer(config.ServerAddress, lomsService)
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	wg := &sync.WaitGroup{}

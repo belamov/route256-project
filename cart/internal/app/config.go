@@ -1,30 +1,38 @@
 package app
 
 import (
-	"flag"
-	"os"
+	"fmt"
+
+	"github.com/kelseyhightower/envconfig"
+	"github.com/rs/zerolog/log"
 )
 
-type ServerConfig struct {
-	Address string
+type Config struct {
+	ServerAddress     string `default:"0.0.0.0:8080"`
+	ProductServiceUrl string `default:"http://route256.pavl.uk:8080/get_product"`
+	LomsServiceUrl    string `default:"http://localhost:8083"`
 }
 
-func BuildServerConfig() *ServerConfig {
-	defaultAddress := "0.0.0.0:8080"
-	flag.Parse()
+func BuildConfig() *Config {
+	var config Config
 
-	cfg := &ServerConfig{
-		Address: coalesceStrings(os.Getenv("ADDRESS"), defaultAddress),
+	err := envconfig.Process("cart", &config)
+	if err != nil {
+		log.Panic().Err(err).Msg("cant build config")
 	}
 
-	return cfg
+	log.Info().Msg("App config:\n" + config.String())
+
+	return &config
 }
 
-func coalesceStrings(strings ...string) string {
-	for _, str := range strings {
-		if str != "" {
-			return str
-		}
-	}
-	return ""
+func (config Config) String() string {
+	return fmt.Sprintf(
+		"ServerAddress: %v\n"+
+			"ProductServiceUrl: %v\n"+
+			"LomsServiceUrl: %v\n",
+		config.ServerAddress,
+		config.ProductServiceUrl,
+		config.LomsServiceUrl,
+	)
 }
