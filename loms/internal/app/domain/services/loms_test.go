@@ -42,7 +42,7 @@ func (ts *LomsTestSuite) SetupSuite() {
 	ts.mockCtrl = gomock.NewController(Reporter{ts.T()})
 	ts.mockStocksProvider = NewMockStocksProvider(ts.mockCtrl)
 	ts.mockOrdersProvider = NewMockOrdersProvider(ts.mockCtrl)
-	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider)
+	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider, DefaultAllowedOrderUnpaidTime)
 }
 
 func TestLomsTestSuite(t *testing.T) {

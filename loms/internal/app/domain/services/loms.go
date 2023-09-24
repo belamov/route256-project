@@ -28,6 +28,7 @@ type Loms interface {
 var (
 	ErrInsufficientStocks = errors.New("insufficient stocks")
 	ErrOrderNotFound      = errors.New("order not found")
+	ErrOrderCancelled     = errors.New("order canceled")
 )
 
 type OrdersProvider interface {
@@ -35,6 +36,7 @@ type OrdersProvider interface {
 	SetStatus(ctx context.Context, order models.Order, status models.OrderStatus) (models.Order, error)
 	GetOrderByOrderId(ctx context.Context, orderId int64) (models.Order, error)
 	CancelUnpaidOrders(ctx context.Context) error
+	GetOrdersIdsByCreatedAtAndStatus(ctx context.Context, createdAt time.Time, orderStatus models.OrderStatus) ([]int64, error)
 }
 
 type StocksProvider interface {
@@ -45,17 +47,25 @@ type StocksProvider interface {
 }
 
 type lomsService struct {
-	ordersProvider OrdersProvider
-	stocksProvider StocksProvider
+	ordersProvider         OrdersProvider
+	stocksProvider         StocksProvider
+	allowedOrderUnpaidTime time.Duration
 }
+
+const DefaultAllowedOrderUnpaidTime = time.Minute * 10
 
 func NewLomsService(
 	ordersProvider OrdersProvider,
 	stocksProvider StocksProvider,
+	allowedOrderUnpaidTime time.Duration,
 ) Loms {
+	if allowedOrderUnpaidTime == 0 {
+		allowedOrderUnpaidTime = DefaultAllowedOrderUnpaidTime
+	}
 	return &lomsService{
-		ordersProvider: ordersProvider,
-		stocksProvider: stocksProvider,
+		ordersProvider:         ordersProvider,
+		stocksProvider:         stocksProvider,
+		allowedOrderUnpaidTime: allowedOrderUnpaidTime,
 	}
 }
 
@@ -116,6 +126,14 @@ func (l *lomsService) OrderPay(ctx context.Context, orderId int64) error {
 			Int64("orderId", orderId).
 			Msg("failed getting order!")
 		return fmt.Errorf("failed getting order!: %w", err)
+	}
+
+	// у нас есть авто отмена неоплаченных заказов спустя
+	// время AllowedOrderUnpaidTime после формирования заказа (см. RunCancelUnpaidOrders)
+	// чтобы избежать ситуаций, когда время отмены заказа совпадет с его оплатой, дополнительно проверим, что
+	// заказ не будет отменен
+	if order.ShouldBeCancelled(l.allowedOrderUnpaidTime) {
+		return ErrOrderCancelled
 	}
 
 	err = l.stocksProvider.ReserveRemove(ctx, order)
@@ -190,9 +208,24 @@ func (l *lomsService) RunCancelUnpaidOrders(ctx context.Context, wg *sync.WaitGr
 
 		case <-ticker.C:
 			log.Info().Msg("Cancelling unpaid orders")
-			err := l.ordersProvider.CancelUnpaidOrders(ctx)
+			// дополнительно отнимем минуту, чтобы предотвратить конфликты. при оплате заказа проверяется
+			// время без этой минуты, а значит будет некий буфер, для того, чтобы точно не оплачивать отмененные заказы
+			timeUnpaidOrdersShouldBeCancelled := time.Now().Add(-l.allowedOrderUnpaidTime - time.Minute)
+			ordersIds, err := l.ordersProvider.GetOrdersIdsByCreatedAtAndStatus(
+				ctx,
+				timeUnpaidOrdersShouldBeCancelled,
+				models.OrderStatusAwaitingPayment,
+			)
 			if err != nil {
-				log.Err(err).Msg("failed to cancel unpaid orders")
+				log.Err(err).Msg("failed to fetch orders to cancel")
+			}
+
+			log.Info().Ints64("ordersIds", ordersIds).Msg("Cancelling unpaid orders")
+			for _, orderId := range ordersIds {
+				err = l.OrderCancel(context.Background(), orderId)
+				if err != nil {
+					log.Err(err).Msg("failed to cancel unpaid order")
+				}
 			}
 		}
 	}

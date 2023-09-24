@@ -12,6 +12,7 @@ import (
 	context "context"
 	reflect "reflect"
 	models "route256/loms/internal/app/domain/models"
+	time "time"
 
 	gomock "go.uber.org/mock/gomock"
 )
@@ -81,6 +82,21 @@ func (m *MockOrdersProvider) GetOrderByOrderId(arg0 context.Context, arg1 int64)
 func (mr *MockOrdersProviderMockRecorder) GetOrderByOrderId(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderByOrderId", reflect.TypeOf((*MockOrdersProvider)(nil).GetOrderByOrderId), arg0, arg1)
+}
+
+// GetOrdersIdsByCreatedAtAndStatus mocks base method.
+func (m *MockOrdersProvider) GetOrdersIdsByCreatedAtAndStatus(arg0 context.Context, arg1 time.Time, arg2 models.OrderStatus) ([]int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrdersIdsByCreatedAtAndStatus", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrdersIdsByCreatedAtAndStatus indicates an expected call of GetOrdersIdsByCreatedAtAndStatus.
+func (mr *MockOrdersProviderMockRecorder) GetOrdersIdsByCreatedAtAndStatus(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersIdsByCreatedAtAndStatus", reflect.TypeOf((*MockOrdersProvider)(nil).GetOrdersIdsByCreatedAtAndStatus), arg0, arg1, arg2)
 }
 
 // SetStatus mocks base method.

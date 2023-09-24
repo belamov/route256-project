@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type OrderStatus uint16
 
 const (
@@ -27,10 +29,20 @@ func (s OrderStatus) String() string {
 }
 
 type Order struct {
-	Items  []OrderItem
-	Id     int64
-	UserId int64
-	Status OrderStatus
+	CreatedAt time.Time
+	Items     []OrderItem
+	Id        int64
+	UserId    int64
+	Status    OrderStatus
+}
+
+func (o *Order) ShouldBeCancelled(allowedOrderUnpaidTime time.Duration) bool {
+	if o.Status != OrderStatusAwaitingPayment {
+		return false
+	}
+
+	durationOrderUnpaid := time.Since(o.CreatedAt)
+	return durationOrderUnpaid >= allowedOrderUnpaidTime
 }
 
 type OrderItem struct {

@@ -20,6 +20,10 @@ import (
 
 type NullOrderProvider struct{}
 
+func (n NullOrderProvider) GetOrdersIdsByCreatedAtAndStatus(ctx context.Context, createdAt time.Time, orderStatus models.OrderStatus) ([]int64, error) {
+	return []int64{}, nil
+}
+
 func (n NullOrderProvider) Create(ctx context.Context, userId int64, statusNew models.OrderStatus, items []models.OrderItem) (models.Order, error) {
 	// TODO implement me
 	panic("implement me")
@@ -42,10 +46,10 @@ func (n NullOrderProvider) CancelUnpaidOrders(ctx context.Context) error {
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Caller().Logger()
 
-	stocksProvider := services.NewMockStocksProvider(nil)
-	lomsService := services.NewLomsService(NullOrderProvider{}, stocksProvider)
-
 	config := app.BuildServerConfig()
+
+	stocksProvider := services.NewMockStocksProvider(nil)
+	lomsService := services.NewLomsService(NullOrderProvider{}, stocksProvider, config.AllowedOrderUnpaidTime)
 
 	srv := server.NewHTTPServer(config.Address, lomsService)
 
@@ -54,7 +58,7 @@ func main() {
 
 	wg.Add(2)
 	go srv.Run(ctx, wg)
-	go lomsService.RunCancelUnpaidOrders(ctx, wg, time.Minute)
+	go lomsService.RunCancelUnpaidOrders(ctx, wg, config.CancelUnpaidOrdersInterval)
 	<-ctx.Done()
 	wg.Wait()
 	log.Info().Msg("goodbye")

@@ -3,10 +3,13 @@ package app
 import (
 	"flag"
 	"os"
+	"time"
 )
 
 type ServerConfig struct {
-	Address string
+	Address                    string
+	AllowedOrderUnpaidTime     time.Duration
+	CancelUnpaidOrdersInterval time.Duration
 }
 
 func BuildServerConfig() *ServerConfig {
@@ -14,7 +17,8 @@ func BuildServerConfig() *ServerConfig {
 	flag.Parse()
 
 	cfg := &ServerConfig{
-		Address: coalesceStrings(os.Getenv("ADDRESS"), defaultAddress),
+		Address:                    coalesceStrings(os.Getenv("ADDRESS"), defaultAddress),
+		CancelUnpaidOrdersInterval: time.Second,
 	}
 
 	return cfg
