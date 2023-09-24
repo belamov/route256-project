@@ -22,10 +22,8 @@ type productHttpClient struct {
 }
 
 func NewProductHttpClient(serviceUrl string) services.ProductService {
-	// TODO: make configurable via env
-	defaultTimeout := time.Second * 3
 	httpClient := &http.Client{
-		Timeout: defaultTimeout,
+		Timeout: time.Second * 3,
 	}
 	return &productHttpClient{
 		client:     httpClient,

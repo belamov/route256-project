@@ -22,10 +22,8 @@ type lomsHttpClient struct {
 }
 
 func NewLomsHttpClient(serviceUrl string) services.LomsService {
-	// TODO: make configurable via env
-	defaultTimeout := time.Second * 3
 	httpClient := &http.Client{
-		Timeout: defaultTimeout,
+		Timeout: time.Second * 3,
 	}
 	return &lomsHttpClient{
 		client:     httpClient,

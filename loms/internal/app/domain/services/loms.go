@@ -14,8 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// TODO:
-// - валидация смены статусов заказа
 type Loms interface {
 	OrderCreate(ctx context.Context, userId int64, items []models.OrderItem) (models.Order, error)
 	OrderInfo(ctx context.Context, orderId int64) (models.Order, error)
