@@ -32,9 +32,11 @@ func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	wg := &sync.WaitGroup{}
 
-	wg.Add(2)
+	wg.Add(1)
 
 	srv.Run(ctx, wg)
-	wg.Done()
+
+	wg.Wait()
+
 	log.Info().Msg("goodbye")
 }

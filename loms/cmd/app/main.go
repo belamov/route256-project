@@ -57,9 +57,11 @@ func main() {
 	wg := &sync.WaitGroup{}
 
 	wg.Add(2)
+
 	go srv.Run(ctx, wg)
 	go lomsService.RunCancelUnpaidOrders(ctx, wg, config.CancelUnpaidOrdersInterval)
-	<-ctx.Done()
+
 	wg.Wait()
+
 	log.Info().Msg("goodbye")
 }
