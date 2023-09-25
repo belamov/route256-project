@@ -1,12 +1,14 @@
+docker_compose_bin := docker compose
+
 build-all:
-	cd cart && GOOS=linux GOARCH=amd64 make build
-	cd loms && GOOS=linux GOARCH=amd64 make build
-	cd notifications && GOOS=linux GOARCH=amd64 make build
+	cd cart && make build
+	cd loms && make build
+	cd notifications && make build
 
 run-all: build-all
-	docker-compose up --force-recreate --build
+	$(docker_compose_bin) up --build
 
-precommit:
-	cd cart && make precommit
-	cd loms && make precommit
-	cd notifications && make precommit
+check:
+	cd cart && make check
+	cd loms && make check
+	cd notifications && make check
