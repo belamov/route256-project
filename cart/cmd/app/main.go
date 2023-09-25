@@ -6,12 +6,12 @@ import (
 	"os/signal"
 	"sync"
 
+	"route256/cart/internal/app/services"
+
 	"route256/cart/internal/app"
 
 	"route256/cart/internal/app/http/clients"
 	"route256/cart/internal/app/http/server"
-
-	"route256/cart/internal/app/domain/services"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

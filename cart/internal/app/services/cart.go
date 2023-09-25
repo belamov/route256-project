@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"route256/cart/internal/app/domain/models"
+	"route256/cart/internal/app/models"
 
 	"github.com/rs/zerolog/log"
 )

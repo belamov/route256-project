@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"route256/loms/internal/app/domain/models"
+	"route256/loms/internal/app/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

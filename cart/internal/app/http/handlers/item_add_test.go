@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"route256/cart/internal/app/domain/models"
-	"route256/cart/internal/app/domain/services"
+	"route256/cart/internal/app/models"
+	"route256/cart/internal/app/services"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

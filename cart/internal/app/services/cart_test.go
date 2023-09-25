@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"route256/cart/internal/app/domain/models"
+	"route256/cart/internal/app/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

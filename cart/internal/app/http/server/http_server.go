@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"route256/cart/internal/app/http/handlers"
+	"route256/cart/internal/app/services"
 
-	"route256/cart/internal/app/domain/services"
+	"route256/cart/internal/app/http/handlers"
 
 	"github.com/rs/zerolog/log"
 )

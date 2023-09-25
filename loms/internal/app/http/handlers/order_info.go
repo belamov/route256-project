@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"route256/loms/internal/app/domain/services"
+	"route256/loms/internal/app/services"
 
 	"github.com/rs/zerolog/log"
 )

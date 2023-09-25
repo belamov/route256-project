@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"route256/cart/internal/app/domain/services"
+	"route256/cart/internal/app/services"
 
 	"github.com/stretchr/testify/assert"
 )

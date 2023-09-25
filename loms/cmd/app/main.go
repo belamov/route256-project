@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"route256/loms/internal/app/http/server"
+	"route256/loms/internal/app/models"
+	"route256/loms/internal/app/services"
 
-	"route256/loms/internal/app/domain/models"
-	"route256/loms/internal/app/domain/services"
+	"route256/loms/internal/app/http/server"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

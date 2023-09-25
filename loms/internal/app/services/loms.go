@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"route256/loms/internal/app/domain/models"
+	"route256/loms/internal/app/models"
 
 	"route256/loms/internal/app/storage"
 

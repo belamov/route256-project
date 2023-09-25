@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"route256/cart/internal/app/domain/models"
+	"route256/cart/internal/app/models"
 )
 
 type ItemDeleteRequest struct {
