@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	ServerAddress     string `default:"0.0.0.0:8080"`
+	HttpServerAddress string `default:"0.0.0.0:8080"`
 	ProductServiceUrl string `default:"http://route256.pavl.uk:8080/get_product"`
 	LomsServiceUrl    string `default:"http://localhost:8083"`
+	GrpcServerAddress string `default:"localhost:8083"`
 }
 
 func BuildConfig() *Config {
@@ -28,11 +29,13 @@ func BuildConfig() *Config {
 
 func (config Config) String() string {
 	return fmt.Sprintf(
-		"ServerAddress: %v\n"+
+		"HttpServerAddress: %v\n"+
 			"ProductServiceUrl: %v\n"+
-			"LomsServiceUrl: %v\n",
-		config.ServerAddress,
+			"LomsServiceUrl: %v\n"+
+			"GrpcServerAddress: %v\n",
+		config.HttpServerAddress,
 		config.ProductServiceUrl,
 		config.LomsServiceUrl,
+		config.GrpcServerAddress,
 	)
 }

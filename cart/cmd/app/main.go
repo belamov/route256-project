@@ -6,15 +6,14 @@ import (
 	"os/signal"
 	"sync"
 
-	"route256/cart/internal/app/services"
-
-	"route256/cart/internal/app"
-
-	"route256/cart/internal/app/http/clients"
-	"route256/cart/internal/app/http/server"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"route256/cart/internal/app"
+	grpcserver "route256/cart/internal/app/grpc/server"
+	"route256/cart/internal/app/http/clients"
+	httpserver "route256/cart/internal/app/http/server"
+	"route256/cart/internal/app/services"
 )
 
 func main() {
@@ -27,14 +26,16 @@ func main() {
 	cartProvider := services.NewMockCartProvider(nil)
 	cartService := services.NewCartService(productService, lomsService, cartProvider)
 
-	srv := server.NewHTTPServer(config.ServerAddress, cartService)
+	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, cartService)
+	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, cartService)
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	wg := &sync.WaitGroup{}
 
-	wg.Add(1)
+	wg.Add(2)
 
-	srv.Run(ctx, wg)
+	go httpServer.Run(ctx, wg)
+	go grpcServer.Run(ctx, wg)
 
 	wg.Wait()
 
