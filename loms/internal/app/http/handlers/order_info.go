@@ -29,8 +29,8 @@ type OrderInfoResponse struct {
 }
 
 type OrderItemInfoResponse struct {
-	Sku   int32  `json:"sku,omitempty"`
-	Count uint16 `json:"count,omitempty"`
+	Sku   uint32 `json:"sku,omitempty"`
+	Count uint64 `json:"count,omitempty"`
 }
 
 func (h *Handler) OrderInfo(w http.ResponseWriter, r *http.Request) {

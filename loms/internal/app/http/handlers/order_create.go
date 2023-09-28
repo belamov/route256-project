@@ -17,8 +17,8 @@ type CreateOrderRequest struct {
 }
 
 type OrderItemRequest struct {
-	Sku   int32  `json:"sku,omitempty"`
-	Count uint16 `json:"count,omitempty"`
+	Sku   uint32 `json:"sku,omitempty"`
+	Count uint64 `json:"count,omitempty"`
 }
 
 func (r *CreateOrderRequest) Validate() error {

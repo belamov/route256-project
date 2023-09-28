@@ -1,6 +1,7 @@
 curdir=$(shell pwd)
 docker_bin := $(shell command -v docker 2> /dev/null)
 app := route256/loms
+user_id := $(shell id -u)
 
 check: build fieldaligment-fix gofumpt lint test
 
@@ -17,7 +18,7 @@ gofumpt:
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) gofumpt -l -w .
 
 fieldaligment-fix:
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) fieldalignment -fix ./... || true
+	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) fieldalignment -fix ./internal/... || true
 
 mock:
 	rm -f internal/app/mocks/*
@@ -25,4 +26,6 @@ mock:
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/services/orders_provider_mock.go -package=services route256/loms/internal/app/services OrdersProvider
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/services/stock_provider_mock.go -package=services route256/loms/internal/app/services StocksProvider
 
+protoc-gen:
+	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative api/proto/loms.proto
 
