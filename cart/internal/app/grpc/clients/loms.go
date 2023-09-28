@@ -32,18 +32,18 @@ func NewLomsGrpcClient(ctx context.Context, wg *sync.WaitGroup, serviceUrl strin
 
 	go func() {
 		<-ctx.Done()
-		log.Info().Msg("Closing lomspb grpc client")
+		log.Info().Msg("Closing loms grpc client")
 		err := conn.Close()
 		if err != nil {
-			log.Err(err).Msg("Couldn't close lomspb grpc connection")
+			log.Err(err).Msg("Couldn't close loms grpc connection")
 			wg.Done()
 			return
 		}
-		log.Info().Msg("Closed lomspb client")
+		log.Info().Msg("Closed loms grpc client")
 		wg.Done()
 	}()
 
-	log.Info().Msg("lomspb grpc client configured. connected to " + serviceUrl)
+	log.Info().Msg("loms grpc client configured. connected to " + serviceUrl)
 
 	return &lomsGrpcClient{
 		grpcClient: grpcClient,
