@@ -39,8 +39,9 @@ vendor-proto-google-api:
     	git sparse-checkout set --no-cone google/api && \
     	git checkout && \
     	cd - && \
-    	mkdir -p  api/proto/google && \
-    	mv vendor-proto/googleapis/google/ api/proto/ && \
+    	mkdir -p  api/proto/google/api && \
+		mv vendor-proto/googleapis/google/api/annotations.proto api/proto/google/api/annotations.proto && \
+		mv vendor-proto/googleapis/google/api/http.proto api/proto/google/api/http.proto && \
     	rm -rf vendor-proto || true"
 
 vendor-proto-validate:
