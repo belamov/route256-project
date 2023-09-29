@@ -12,6 +12,11 @@ import (
 )
 
 func (s *GrpcServer) OrderInfo(ctx context.Context, request *pb.OrderInfoRequest) (*pb.OrderInfoResponse, error) {
+	err := request.Validate()
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	order, err := s.service.OrderInfo(ctx, request.OrderId)
 	if errors.Is(err, services.ErrOrderNotFound) {
 		return nil, status.Error(codes.NotFound, err.Error())

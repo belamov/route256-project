@@ -3,7 +3,7 @@ docker_bin := $(shell command -v docker 2> /dev/null)
 app := route256/loms
 user_id := $(shell id -u)
 
-check: build fieldaligment-fix gofumpt lint protoc-gen test
+check: build gofumpt lint protoc-gen test
 
 build:
 	$(docker_bin) build -t $(app) .
@@ -27,7 +27,7 @@ mock:
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/services/stock_provider_mock.go -package=services route256/loms/internal/app/services StocksProvider
 
 protoc-gen:
-	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) protoc --go_out=/usr/src/app/ --go-grpc_out=/usr/src/app/ --grpc-gateway_out=/usr/src/app/ -I /usr/src/app/api/proto/google/api -I api/proto/ loms.proto
+	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) protoc --go_out=/usr/src/app/ --go-grpc_out=/usr/src/app/ --grpc-gateway_out=/usr/src/app/ --validate_out=lang=go:/usr/src/app/ -I /usr/src/app/api/proto/google/api -I api/proto/ loms.proto
 
 vendor-proto-google-api:
 	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "\
@@ -42,3 +42,16 @@ vendor-proto-google-api:
     	mkdir -p  api/proto/google && \
     	mv vendor-proto/googleapis/google/ api/proto/ && \
     	rm -rf vendor-proto || true"
+
+vendor-proto-validate:
+	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "\
+		rm -r vendor-proto/validate || true && \
+		rm api/proto/validate.proto || true && \
+		git clone -b main --single-branch --depth=2 --filter=tree:0 \
+		https://github.com/bufbuild/protoc-gen-validate vendor-proto/tmp && \
+		cd vendor-proto/tmp && \
+		git sparse-checkout set --no-cone validate && \
+		git checkout && \
+		cd - && \
+		mv vendor-proto/tmp/validate/validate.proto api/proto/validate.proto && \
+		rm -rf vendor-proto || true"

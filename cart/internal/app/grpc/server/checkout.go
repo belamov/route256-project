@@ -10,6 +10,11 @@ import (
 )
 
 func (s *GrpcServer) Checkout(ctx context.Context, request *pb.CheckoutRequest) (*pb.CheckoutResponse, error) {
+	err := request.Validate()
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	orderId, err := s.service.Checkout(ctx, request.User)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

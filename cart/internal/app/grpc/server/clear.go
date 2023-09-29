@@ -11,7 +11,12 @@ import (
 )
 
 func (s *GrpcServer) Clear(ctx context.Context, request *pb.ClearRequest) (*emptypb.Empty, error) {
-	err := s.service.DeleteItemsByUserId(ctx, request.User)
+	err := request.Validate()
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	err = s.service.DeleteItemsByUserId(ctx, request.User)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

@@ -14,13 +14,18 @@ import (
 )
 
 func (s *GrpcServer) AddItem(ctx context.Context, request *pb.AddItemRequest) (*emptypb.Empty, error) {
+	err := request.Validate()
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	cartItem := models.CartItem{
 		User:  request.User,
 		Sku:   request.Item.Sku,
 		Count: request.Item.Count,
 	}
 
-	err := s.service.AddItem(ctx, cartItem)
+	err = s.service.AddItem(ctx, cartItem)
 	if errors.Is(err, services.ErrInsufficientStocks) {
 		return nil, status.Error(codes.FailedPrecondition, err.Error())
 	}

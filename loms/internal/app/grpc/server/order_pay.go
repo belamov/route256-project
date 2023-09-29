@@ -13,7 +13,12 @@ import (
 )
 
 func (s *GrpcServer) OrderPay(ctx context.Context, request *pb.OrderPayRequest) (*emptypb.Empty, error) {
-	err := s.service.OrderPay(ctx, request.OrderId)
+	err := request.Validate()
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	err = s.service.OrderPay(ctx, request.OrderId)
 	if errors.Is(err, services.ErrOrderNotFound) {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}

@@ -10,6 +10,11 @@ import (
 )
 
 func (s *GrpcServer) List(ctx context.Context, request *pb.ListRequest) (*pb.ListResponse, error) {
+	err := request.Validate()
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	items, totalPrice, err := s.service.GetItemsByUserId(ctx, request.User)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

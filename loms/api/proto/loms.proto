@@ -6,6 +6,7 @@ option go_package="internal/app/grpc/pb";
 
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
+import "validate.proto";
 
 service Loms {
   rpc OrderCreate(OrderCreateRequest) returns (OrderCreateResponse) {
@@ -41,13 +42,13 @@ service Loms {
 }
 
 message OrderCreateRequest {
-  int64 user = 1;
+  int64 user = 1 [(validate.rules).int64.gt = 0];
   repeated OrderItemCreateRequest items = 2;
 }
 
 message OrderItemCreateRequest {
-  uint32 sku = 1;
-  uint64 count = 2;
+  uint32 sku = 1 [(validate.rules).uint32.gt = 0];
+  uint64 count = 2 [(validate.rules).uint64.gt = 0];
 }
 
 message OrderCreateResponse {
@@ -55,7 +56,7 @@ message OrderCreateResponse {
 }
 
 message OrderInfoRequest {
-  int64 orderId = 1;
+  int64 orderId = 1 [(validate.rules).int64.gt = 0];
 }
 
 message OrderInfoResponse {
@@ -73,15 +74,15 @@ message OrderItemInfoResponse {
 }
 
 message OrderPayRequest {
-  int64 orderId = 1;
+  int64 orderId = 1 [(validate.rules).int64.gt = 0];
 }
 
 message OrderCancelRequest {
-  int64 orderId = 1;
+  int64 orderId = 1 [(validate.rules).int64.gt = 0];
 }
 
 message StockInfoRequest {
-  uint32 sku = 1;
+  uint32 sku = 1 [(validate.rules).uint32.gt = 0];
 }
 
 message StockInfoResponse {

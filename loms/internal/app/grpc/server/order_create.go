@@ -13,6 +13,11 @@ import (
 )
 
 func (s *GrpcServer) OrderCreate(ctx context.Context, request *pb.OrderCreateRequest) (*pb.OrderCreateResponse, error) {
+	err := request.Validate()
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	orderItems := make([]models.OrderItem, 0, len(request.Items))
 	for _, item := range request.Items {
 		orderItems = append(orderItems, models.OrderItem{
