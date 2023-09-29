@@ -28,8 +28,21 @@ mock:
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && mockgen -destination=internal/app/services/loms_mock.go -package=services route256/cart/internal/app/services LomsService"
 
 protoc-gen:
-	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && protoc --go_out=/usr/src/app/ --go-grpc_out=/usr/src/app/ api/proto/cart.proto"
+	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && protoc --go_out=/usr/src/app/ --go-grpc_out=/usr/src/app/ --grpc-gateway_out=/usr/src/app/ -I /usr/src/app/cart/api/proto/google/api -I api/proto/ cart.proto"
 	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cp loms/api/proto/loms.proto cart/internal/app/grpc/clients/loms/pb/loms.proto && cd cart/internal/app/grpc/clients/loms/pb && protoc  --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative loms.proto"
 	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative internal/app/grpc/clients/product/pb/product.proto"
 
+vendor-proto-google-api:
+	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "\
+		rm -r vendor-proto/googleapis || true && \
+		rm -r cart/api/proto/google || true && \
+		git clone -b master --single-branch -n --depth=1 --filter=tree:0 \
+     		https://github.com/googleapis/googleapis vendor-proto/googleapis && \
+     	cd vendor-proto/googleapis && \
+    	git sparse-checkout set --no-cone google/api && \
+    	git checkout && \
+    	cd - && \
+    	mkdir -p  cart/api/proto/google && \
+    	mv vendor-proto/googleapis/google/ cart/api/proto/ && \
+    	rm -rf vendor-proto || true"
 

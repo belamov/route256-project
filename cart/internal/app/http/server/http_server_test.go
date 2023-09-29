@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"route256/cart/internal/app/http/handlers"
+
 	"route256/cart/internal/app/services"
 
 	"github.com/stretchr/testify/assert"
@@ -26,7 +28,7 @@ func TestHTTPServer_Run(t *testing.T) {
 
 	port := chooseRandomUnusedPort()
 	serverAddress := fmt.Sprintf("0.0.0.0:%d", port)
-	server := NewHTTPServer(serverAddress, mockService)
+	server := NewHTTPServer(serverAddress, handlers.NewRouter(mockService))
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	wg := &sync.WaitGroup{}

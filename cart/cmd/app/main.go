@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"sync"
 
+	"route256/cart/internal/app/http/handlers"
+
 	"route256/cart/internal/app"
 	"route256/cart/internal/app/grpc/clients/loms"
 	"route256/cart/internal/app/grpc/clients/product"
@@ -42,13 +44,14 @@ func main() {
 	cartProvider := services.NewMockCartProvider(nil)
 	cartService := services.NewCartService(productService, lomsService, cartProvider)
 
-	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, cartService)
-	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, cartService)
+	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, handlers.NewRouter(cartService))
+	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, config.GrpcGatewayServerAddress, cartService)
 
-	wg.Add(2)
+	wg.Add(3)
 
 	go httpServer.Run(ctx, wg)
 	go grpcServer.Run(ctx, wg)
+	go grpcServer.RunGateway(ctx, wg)
 
 	wg.Wait()
 

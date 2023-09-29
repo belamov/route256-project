@@ -8,12 +8,13 @@ import (
 )
 
 type Config struct {
-	HttpServerAddress     string `default:"0.0.0.0:8080"`
-	ProductHttpServiceUrl string `default:"http://route256.pavl.uk:8080/get_product"`
-	ProductGrpcServiceUrl string `default:"route256.pavl.uk:8082"`
-	LomsHttpServiceUrl    string `default:"http://localhost:8080"`
-	GrpcServerAddress     string `default:"localhost:8083"`
-	LomsGrpcServiceUrl    string `default:"localhost:8083"`
+	HttpServerAddress        string `default:"0.0.0.0:8080"`
+	ProductHttpServiceUrl    string `default:"http://route256.pavl.uk:8080/get_product"`
+	ProductGrpcServiceUrl    string `default:"route256.pavl.uk:8082"`
+	LomsHttpServiceUrl       string `default:"http://localhost:8080"`
+	GrpcServerAddress        string `default:"localhost:8083"`
+	GrpcGatewayServerAddress string `default:"0.0.0.0:8084"`
+	LomsGrpcServiceUrl       string `default:"localhost:8083"`
 }
 
 func BuildConfig() *Config {
@@ -36,12 +37,14 @@ func (config Config) String() string {
 			"ProductGrpcServiceUrl: %v\n"+
 			"LomsHttpServiceUrl: %v\n"+
 			"LomsGrpcServiceUrl: %v\n"+
+			"GrpcGatewayServerAddress: %v\n"+
 			"GrpcServerAddress: %v\n",
 		config.HttpServerAddress,
 		config.ProductHttpServiceUrl,
 		config.ProductGrpcServiceUrl,
 		config.LomsHttpServiceUrl,
 		config.LomsGrpcServiceUrl,
+		config.GrpcGatewayServerAddress,
 		config.GrpcServerAddress,
 	)
 }

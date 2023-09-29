@@ -7,10 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"route256/cart/internal/app/services"
-
-	"route256/cart/internal/app/http/handlers"
-
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,11 +14,11 @@ type HTTPServer struct {
 	server *http.Server
 }
 
-func NewHTTPServer(addr string, service services.Cart) *HTTPServer {
+func NewHTTPServer(addr string, handler http.Handler) *HTTPServer {
 	return &HTTPServer{
 		server: &http.Server{
 			Addr:              addr,
-			Handler:           handlers.NewRouter(service),
+			Handler:           handler,
 			ReadHeaderTimeout: 1 * time.Second,
 		},
 	}

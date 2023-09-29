@@ -5,13 +5,39 @@ package cart;
 option go_package="cart/internal/app/grpc/pb";
 
 import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
 
 service Cart {
-  rpc AddItem(AddItemRequest) returns (google.protobuf.Empty);
-  rpc DeleteItem(DeleteItemRequest) returns (google.protobuf.Empty);
-  rpc List(ListRequest) returns (ListResponse);
-  rpc Clear(ClearRequest) returns (google.protobuf.Empty);
-  rpc Checkout(CheckoutRequest) returns (CheckoutResponse);
+  rpc AddItem(AddItemRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/cart/item/add"
+      body: "*"
+    };
+  };
+  rpc DeleteItem(DeleteItemRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/cart/item/delete"
+      body: "*"
+    };
+  };
+  rpc List(ListRequest) returns (ListResponse) {
+    option (google.api.http) = {
+      post: "/cart/list"
+      body: "*"
+    };
+  };
+  rpc Clear(ClearRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/cart/clear"
+      body: "*"
+    };
+  };
+  rpc Checkout(CheckoutRequest) returns (CheckoutResponse) {
+    option (google.api.http) = {
+      post: "/cart/checkout"
+      body: "*"
+    };
+  };
 }
 
 message AddItemRequest {

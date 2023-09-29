@@ -51,7 +51,7 @@ func (s *CartGrpcServerTestSuite) SetupTest() {
 
 	mockService := services.NewMockCart(ctrl)
 
-	appServer := NewGRPCServer("", mockService)
+	appServer := NewGRPCServer("", "", mockService)
 
 	pb.RegisterCartServer(grpcServer, appServer)
 
