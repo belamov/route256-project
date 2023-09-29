@@ -5,13 +5,39 @@ package loms;
 option go_package="internal/app/grpc/pb";
 
 import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
 
 service Loms {
-  rpc OrderCreate(OrderCreateRequest) returns (OrderCreateResponse);
-  rpc OrderInfo(OrderInfoRequest) returns (OrderInfoResponse);
-  rpc OrderPay(OrderPayRequest) returns (google.protobuf.Empty);
-  rpc OrderCancel(OrderCancelRequest) returns (google.protobuf.Empty);
-  rpc StockInfo(StockInfoRequest) returns (StockInfoResponse);
+  rpc OrderCreate(OrderCreateRequest) returns (OrderCreateResponse) {
+    option (google.api.http) = {
+      post: "/order/create"
+      body: "*"
+    };
+  };
+  rpc OrderInfo(OrderInfoRequest) returns (OrderInfoResponse) {
+    option (google.api.http) = {
+      post: "/order/info"
+      body: "*"
+    };
+  };
+  rpc OrderPay(OrderPayRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/order/pay"
+      body: "*"
+    };
+  };
+  rpc OrderCancel(OrderCancelRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/order/cancel"
+      body: "*"
+    };
+  };
+  rpc StockInfo(StockInfoRequest) returns (StockInfoResponse) {
+    option (google.api.http) = {
+      post: "/stock/info"
+      body: "*"
+    };
+  };
 }
 
 message OrderCreateRequest {

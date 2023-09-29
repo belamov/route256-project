@@ -51,7 +51,7 @@ func (s *LomsGrpcServerTestSuite) SetupTest() {
 
 	mockService := services.NewMockLoms(ctrl)
 
-	appServer := NewGRPCServer("", mockService)
+	appServer := NewGRPCServer("", "", mockService)
 
 	pb.RegisterLomsServer(grpcServer, appServer)
 

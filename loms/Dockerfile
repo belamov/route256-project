@@ -10,6 +10,7 @@ RUN go install mvdan.cc/gofumpt@latest
 RUN go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+RUN go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
 RUN export PATH="$PATH:$(go env GOPATH)/bin"
 COPY . .
 RUN go build -v -o /loms ./cmd/app
