@@ -3,13 +3,14 @@ package server
 import (
 	"context"
 
+	"route256/cart/internal/app/grpc/pb"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	cartpb "route256/cart/api/proto"
 )
 
 func (s *CartGrpcServerTestSuite) TestClear() {
-	request := cartpb.ClearRequest{
+	request := pb.ClearRequest{
 		User: 1,
 	}
 

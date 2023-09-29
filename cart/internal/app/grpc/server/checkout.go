@@ -3,18 +3,19 @@ package server
 import (
 	"context"
 
+	"route256/cart/internal/app/grpc/pb"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	cartpb "route256/cart/api/proto"
 )
 
-func (s *GrpcServer) Checkout(ctx context.Context, request *cartpb.CheckoutRequest) (*cartpb.CheckoutResponse, error) {
+func (s *GrpcServer) Checkout(ctx context.Context, request *pb.CheckoutRequest) (*pb.CheckoutResponse, error) {
 	orderId, err := s.service.Checkout(ctx, request.User)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	response := cartpb.CheckoutResponse{OrderID: orderId}
+	response := pb.CheckoutResponse{OrderID: orderId}
 
 	return &response, nil
 }

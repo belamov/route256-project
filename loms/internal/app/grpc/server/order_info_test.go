@@ -4,18 +4,19 @@ import (
 	"context"
 	"time"
 
+	"route256/loms/internal/app/grpc/pb"
+	"route256/loms/internal/app/models"
+	"route256/loms/internal/app/services"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	lomspb "route256/loms/api/proto"
-	"route256/loms/internal/app/models"
-	"route256/loms/internal/app/services"
 )
 
 func (s *LomsGrpcServerTestSuite) TestOrderInfo() {
-	request := lomspb.OrderInfoRequest{
+	request := pb.OrderInfoRequest{
 		OrderId: 1,
 	}
 
@@ -36,7 +37,7 @@ func (s *LomsGrpcServerTestSuite) TestOrderInfo() {
 }
 
 func (s *LomsGrpcServerTestSuite) TestOrderInfoNotFound() {
-	request := lomspb.OrderInfoRequest{
+	request := pb.OrderInfoRequest{
 		OrderId: 1,
 	}
 

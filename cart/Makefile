@@ -28,6 +28,8 @@ mock:
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && mockgen -destination=internal/app/services/loms_mock.go -package=services route256/cart/internal/app/services LomsService"
 
 protoc-gen:
-	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative api/proto/cart.proto"
-	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative internal/app/grpc/clients/product/product.proto"
+	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && protoc --go_out=/usr/src/app/ --go-grpc_out=/usr/src/app/ api/proto/cart.proto"
+	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cp loms/api/proto/loms.proto cart/internal/app/grpc/clients/loms/pb/loms.proto && cd cart/internal/app/grpc/clients/loms/pb && protoc  --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative loms.proto"
+	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative internal/app/grpc/clients/product/pb/product.proto"
+
 

@@ -6,17 +6,17 @@ import (
 	"net"
 	"sync"
 
+	"route256/loms/internal/app/grpc/pb"
+	"route256/loms/internal/app/services"
+
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-
-	lomspb "route256/loms/api/proto"
-	"route256/loms/internal/app/services"
 )
 
 type GrpcServer struct {
-	lomspb.UnimplementedLomsServer
+	pb.UnimplementedLomsServer
 	server        *grpc.Server
 	service       services.Loms
 	ServerAddress string
@@ -50,7 +50,7 @@ func (s *GrpcServer) Run(ctx context.Context, wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 
-	lomspb.RegisterLomsServer(s.server, s)
+	pb.RegisterLomsServer(s.server, s)
 
 	listen, err := net.Listen("tcp", s.ServerAddress)
 	if err != nil {

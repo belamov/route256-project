@@ -27,5 +27,5 @@ mock:
 	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) mockgen -destination=internal/app/services/stock_provider_mock.go -package=services route256/loms/internal/app/services StocksProvider
 
 protoc-gen:
-	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative api/proto/loms.proto
+	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) protoc --go_out=/usr/src/app/ --go-grpc_out=/usr/src/app/ api/proto/loms.proto
 

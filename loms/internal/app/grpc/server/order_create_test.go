@@ -4,20 +4,21 @@ import (
 	"context"
 	"time"
 
+	"route256/loms/internal/app/grpc/pb"
+	"route256/loms/internal/app/models"
+	"route256/loms/internal/app/services"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	lomspb "route256/loms/api/proto"
-	"route256/loms/internal/app/models"
-	"route256/loms/internal/app/services"
 )
 
 func (s *LomsGrpcServerTestSuite) TestOrderCreate() {
-	request := lomspb.OrderCreateRequest{
+	request := pb.OrderCreateRequest{
 		User: 1,
-		Items: []*lomspb.OrderItemCreateRequest{
+		Items: []*pb.OrderItemCreateRequest{
 			{
 				Sku:   1,
 				Count: 1,
@@ -42,9 +43,9 @@ func (s *LomsGrpcServerTestSuite) TestOrderCreate() {
 }
 
 func (s *LomsGrpcServerTestSuite) TestOrderCreateInsufficientStocks() {
-	request := lomspb.OrderCreateRequest{
+	request := pb.OrderCreateRequest{
 		User: 1,
-		Items: []*lomspb.OrderItemCreateRequest{
+		Items: []*pb.OrderItemCreateRequest{
 			{
 				Sku:   1,
 				Count: 1,

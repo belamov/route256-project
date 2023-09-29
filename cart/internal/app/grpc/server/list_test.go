@@ -3,10 +3,11 @@ package server
 import (
 	"context"
 
+	"route256/cart/internal/app/grpc/pb"
+	"route256/cart/internal/app/models"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	cartpb "route256/cart/api/proto"
-	"route256/cart/internal/app/models"
 )
 
 func (s *CartGrpcServerTestSuite) TestList() {
@@ -29,7 +30,7 @@ func (s *CartGrpcServerTestSuite) TestList() {
 		},
 	}
 
-	request := &cartpb.ListRequest{User: userId}
+	request := &pb.ListRequest{User: userId}
 	s.mockService.EXPECT().GetItemsByUserId(gomock.Any(), gomock.Any()).Times(1).Return(items, totalPrice, nil)
 
 	response, err := s.client.List(context.Background(), request)

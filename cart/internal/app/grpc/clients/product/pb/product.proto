@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package route256.product;
 
-option go_package="route256/cart/grpc/clients/product";
+option go_package="route256/cart/grpc/clients/product/pb";
 
 service ProductService{
     rpc GetProduct(GetProductRequest) returns (GetProductResponse);

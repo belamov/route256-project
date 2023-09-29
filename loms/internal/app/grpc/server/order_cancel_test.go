@@ -3,17 +3,18 @@ package server
 import (
 	"context"
 
+	"route256/loms/internal/app/grpc/pb"
+	"route256/loms/internal/app/services"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	lomspb "route256/loms/api/proto"
-	"route256/loms/internal/app/services"
 )
 
 func (s *LomsGrpcServerTestSuite) TestOrderCancel() {
-	request := lomspb.OrderCancelRequest{
+	request := pb.OrderCancelRequest{
 		OrderId: 1,
 	}
 
@@ -24,7 +25,7 @@ func (s *LomsGrpcServerTestSuite) TestOrderCancel() {
 }
 
 func (s *LomsGrpcServerTestSuite) TestOrderCancelOrderNotFound() {
-	request := lomspb.OrderCancelRequest{
+	request := pb.OrderCancelRequest{
 		OrderId: 1,
 	}
 

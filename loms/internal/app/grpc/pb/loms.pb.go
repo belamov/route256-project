@@ -4,7 +4,7 @@
 // 	protoc        v3.21.12
 // source: api/proto/loms.proto
 
-package loms
+package pb
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -23,11 +23,10 @@ const (
 
 type OrderCreateRequest struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	User  int64                     `protobuf:"varint,1,opt,name=user,proto3" json:"user,omitempty"`
-	Items []*OrderItemCreateRequest `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*OrderItemCreateRequest `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	User          int64                     `protobuf:"varint,1,opt,name=user,proto3" json:"user,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OrderCreateRequest) Reset() {
@@ -78,11 +77,10 @@ func (x *OrderCreateRequest) GetItems() []*OrderItemCreateRequest {
 
 type OrderItemCreateRequest struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Sku   uint32 `protobuf:"varint,1,opt,name=sku,proto3" json:"sku,omitempty"`
-	Count uint64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	Count         uint64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	sizeCache     protoimpl.SizeCache
+	Sku           uint32 `protobuf:"varint,1,opt,name=sku,proto3" json:"sku,omitempty"`
 }
 
 func (x *OrderItemCreateRequest) Reset() {
@@ -133,10 +131,9 @@ func (x *OrderItemCreateRequest) GetCount() uint64 {
 
 type OrderCreateResponse struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	OrderId int64 `protobuf:"varint,1,opt,name=orderId,proto3" json:"orderId,omitempty"`
+	OrderId       int64 `protobuf:"varint,1,opt,name=orderId,proto3" json:"orderId,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OrderCreateResponse) Reset() {
@@ -180,10 +177,9 @@ func (x *OrderCreateResponse) GetOrderId() int64 {
 
 type OrderInfoRequest struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	OrderId int64 `protobuf:"varint,1,opt,name=orderId,proto3" json:"orderId,omitempty"`
+	OrderId       int64 `protobuf:"varint,1,opt,name=orderId,proto3" json:"orderId,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OrderInfoRequest) Reset() {
@@ -227,12 +223,11 @@ func (x *OrderInfoRequest) GetOrderId() int64 {
 
 type OrderInfoResponse struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	Status        string `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Status string                   `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	User   int64                    `protobuf:"varint,2,opt,name=user,proto3" json:"user,omitempty"`
-	Items  []*OrderItemInfoResponse `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*OrderItemInfoResponse `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	User          int64                    `protobuf:"varint,2,opt,name=user,proto3" json:"user,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OrderInfoResponse) Reset() {
@@ -290,13 +285,12 @@ func (x *OrderInfoResponse) GetItems() []*OrderItemInfoResponse {
 
 type OrderItemInfoResponse struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	Name          string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Sku   uint32 `protobuf:"varint,1,opt,name=sku,proto3" json:"sku,omitempty"`
-	Count uint64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
-	Name  string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Price uint32 `protobuf:"varint,4,opt,name=price,proto3" json:"price,omitempty"`
+	Count         uint64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	sizeCache     protoimpl.SizeCache
+	Sku           uint32 `protobuf:"varint,1,opt,name=sku,proto3" json:"sku,omitempty"`
+	Price         uint32 `protobuf:"varint,4,opt,name=price,proto3" json:"price,omitempty"`
 }
 
 func (x *OrderItemInfoResponse) Reset() {
@@ -361,10 +355,9 @@ func (x *OrderItemInfoResponse) GetPrice() uint32 {
 
 type OrderPayRequest struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	OrderId int64 `protobuf:"varint,1,opt,name=orderId,proto3" json:"orderId,omitempty"`
+	OrderId       int64 `protobuf:"varint,1,opt,name=orderId,proto3" json:"orderId,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OrderPayRequest) Reset() {
@@ -408,10 +401,9 @@ func (x *OrderPayRequest) GetOrderId() int64 {
 
 type OrderCancelRequest struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	OrderId int64 `protobuf:"varint,1,opt,name=orderId,proto3" json:"orderId,omitempty"`
+	OrderId       int64 `protobuf:"varint,1,opt,name=orderId,proto3" json:"orderId,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OrderCancelRequest) Reset() {
@@ -455,10 +447,9 @@ func (x *OrderCancelRequest) GetOrderId() int64 {
 
 type StockInfoRequest struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Sku uint32 `protobuf:"varint,1,opt,name=sku,proto3" json:"sku,omitempty"`
+	sizeCache     protoimpl.SizeCache
+	Sku           uint32 `protobuf:"varint,1,opt,name=sku,proto3" json:"sku,omitempty"`
 }
 
 func (x *StockInfoRequest) Reset() {
@@ -502,10 +493,9 @@ func (x *StockInfoRequest) GetSku() uint32 {
 
 type StockInfoResponse struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Count uint64 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	Count         uint64 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StockInfoResponse) Reset() {
@@ -614,9 +604,9 @@ var file_api_proto_loms_proto_rawDesc = []byte{
 	0x53, 0x74, 0x6f, 0x63, 0x6b, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x16, 0x2e, 0x6c, 0x6f, 0x6d, 0x73,
 	0x2e, 0x53, 0x74, 0x6f, 0x63, 0x6b, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x1a, 0x17, 0x2e, 0x6c, 0x6f, 0x6d, 0x73, 0x2e, 0x53, 0x74, 0x6f, 0x63, 0x6b, 0x49, 0x6e,
-	0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x0f, 0x5a, 0x0d, 0x72, 0x6f,
-	0x75, 0x74, 0x65, 0x32, 0x35, 0x36, 0x2f, 0x6c, 0x6f, 0x6d, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x16, 0x5a, 0x14, 0x69, 0x6e,
+	0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f,
+	0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

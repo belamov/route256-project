@@ -6,15 +6,15 @@ import (
 	"net"
 	"testing"
 
+	"route256/loms/internal/app/grpc/pb"
+	"route256/loms/internal/app/services"
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
-
-	lomspb "route256/loms/api/proto"
-	"route256/loms/internal/app/services"
 )
 
 type Reporter struct {
@@ -37,7 +37,7 @@ func (r Reporter) Fatalf(format string, args ...interface{}) {
 
 type LomsGrpcServerTestSuite struct {
 	suite.Suite
-	client      lomspb.LomsClient
+	client      pb.LomsClient
 	conn        *grpc.ClientConn
 	mockCtrl    *gomock.Controller
 	grpcServer  *grpc.Server
@@ -53,7 +53,7 @@ func (s *LomsGrpcServerTestSuite) SetupTest() {
 
 	appServer := NewGRPCServer("", mockService)
 
-	lomspb.RegisterLomsServer(grpcServer, appServer)
+	pb.RegisterLomsServer(grpcServer, appServer)
 
 	s.mockCtrl = ctrl
 	s.grpcServer = grpcServer
@@ -77,7 +77,7 @@ func (s *LomsGrpcServerTestSuite) SetupTest() {
 		require.NoError(s.T(), errServe)
 	}(s)
 
-	s.client = lomspb.NewLomsClient(conn)
+	s.client = pb.NewLomsClient(conn)
 	s.conn = conn
 	s.mockService = mockService
 }

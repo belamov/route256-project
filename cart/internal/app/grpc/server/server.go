@@ -6,17 +6,17 @@ import (
 	"net"
 	"sync"
 
+	"route256/cart/internal/app/grpc/pb"
+	"route256/cart/internal/app/services"
+
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-
-	cartpb "route256/cart/api/proto"
-	"route256/cart/internal/app/services"
 )
 
 type GrpcServer struct {
-	cartpb.UnimplementedCartServer
+	pb.UnimplementedCartServer
 	server        *grpc.Server
 	service       services.Cart
 	ServerAddress string
@@ -50,7 +50,7 @@ func (s *GrpcServer) Run(ctx context.Context, wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 
-	cartpb.RegisterCartServer(s.server, s)
+	pb.RegisterCartServer(s.server, s)
 
 	listen, err := net.Listen("tcp", s.ServerAddress)
 	if err != nil {

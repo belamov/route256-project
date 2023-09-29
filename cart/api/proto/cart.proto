@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package cart;
 
-option go_package="route256/cart";
+option go_package="cart/internal/app/grpc/pb";
 
 import "google/protobuf/empty.proto";
 

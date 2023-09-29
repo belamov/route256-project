@@ -6,15 +6,15 @@ import (
 	"net"
 	"testing"
 
+	"route256/cart/internal/app/grpc/pb"
+	"route256/cart/internal/app/services"
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
-
-	pb "route256/cart/api/proto"
-	"route256/cart/internal/app/services"
 )
 
 type Reporter struct {

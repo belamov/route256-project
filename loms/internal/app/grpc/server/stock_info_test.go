@@ -3,13 +3,14 @@ package server
 import (
 	"context"
 
+	"route256/loms/internal/app/grpc/pb"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	lomspb "route256/loms/api/proto"
 )
 
 func (s *LomsGrpcServerTestSuite) TestStockInfo() {
-	request := lomspb.StockInfoRequest{
+	request := pb.StockInfoRequest{
 		Sku: 1,
 	}
 

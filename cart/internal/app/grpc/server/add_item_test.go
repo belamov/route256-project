@@ -3,19 +3,20 @@ package server
 import (
 	"context"
 
+	"route256/cart/internal/app/grpc/pb"
+	"route256/cart/internal/app/services"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	cartpb "route256/cart/api/proto"
-	"route256/cart/internal/app/services"
 )
 
 func (s *CartGrpcServerTestSuite) TestAddItem() {
-	request := cartpb.AddItemRequest{
+	request := pb.AddItemRequest{
 		User: 1,
-		Item: &cartpb.CartItemAddRequest{
+		Item: &pb.CartItemAddRequest{
 			User:  1,
 			Sku:   1,
 			Count: 1,
@@ -29,9 +30,9 @@ func (s *CartGrpcServerTestSuite) TestAddItem() {
 }
 
 func (s *CartGrpcServerTestSuite) TestAddItemInsufficientStocks() {
-	request := cartpb.AddItemRequest{
+	request := pb.AddItemRequest{
 		User: 1,
-		Item: &cartpb.CartItemAddRequest{
+		Item: &pb.CartItemAddRequest{
 			User:  1,
 			Sku:   1,
 			Count: 1,

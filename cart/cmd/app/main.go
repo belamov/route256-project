@@ -6,17 +6,15 @@ import (
 	"os/signal"
 	"sync"
 
-	"route256/cart/internal/app/grpc/clients/product"
-
-	grpcclients "route256/cart/internal/app/grpc/clients"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-
 	"route256/cart/internal/app"
+	"route256/cart/internal/app/grpc/clients/loms"
+	"route256/cart/internal/app/grpc/clients/product"
 	grpcserver "route256/cart/internal/app/grpc/server"
 	httpserver "route256/cart/internal/app/http/server"
 	"route256/cart/internal/app/services"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -27,7 +25,7 @@ func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	wg := &sync.WaitGroup{}
 
-	lomsService, err := grpcclients.NewLomsGrpcClient(ctx, wg, config.LomsGrpcServiceUrl)
+	lomsService, err := loms.NewLomsGrpcClient(ctx, wg, config.LomsGrpcServiceUrl)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed init grpc loms client")
 		return

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.12
-// source: internal/app/grpc/clients/product/product.proto
+// source: internal/app/grpc/clients/product/pb/product.proto
 
-package product
+package pb
 
 import (
 	context "context"
@@ -101,5 +101,5 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "internal/app/grpc/clients/product/product.proto",
+	Metadata: "internal/app/grpc/clients/product/pb/product.proto",
 }

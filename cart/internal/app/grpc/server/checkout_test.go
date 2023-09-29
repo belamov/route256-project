@@ -3,13 +3,14 @@ package server
 import (
 	"context"
 
+	"route256/cart/internal/app/grpc/pb"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	cartpb "route256/cart/api/proto"
 )
 
 func (s *CartGrpcServerTestSuite) TestCheckout() {
-	request := cartpb.CheckoutRequest{
+	request := pb.CheckoutRequest{
 		User: 1,
 	}
 

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"sync"
 
+	"route256/cart/internal/app/grpc/clients/product/pb"
+
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -14,7 +16,7 @@ import (
 )
 
 type productGrpcClient struct {
-	grpcClient ProductServiceClient
+	grpcClient pb.ProductServiceClient
 	conn       *grpc.ClientConn
 }
 
@@ -28,7 +30,7 @@ func NewProductGrpcClient(ctx context.Context, wg *sync.WaitGroup, serviceUrl st
 		return nil, err
 	}
 
-	grpcClient := NewProductServiceClient(conn)
+	grpcClient := pb.NewProductServiceClient(conn)
 
 	go func() {
 		<-ctx.Done()
@@ -57,7 +59,7 @@ func (p *productGrpcClient) GetProduct(ctx context.Context, sku uint32) (models.
 		return models.CartItemInfo{}, errors.New("cant parse products_token from context")
 	}
 
-	request := &GetProductRequest{
+	request := &pb.GetProductRequest{
 		Token: token,
 		Sku:   sku,
 	}

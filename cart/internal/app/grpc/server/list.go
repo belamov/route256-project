@@ -3,23 +3,24 @@ package server
 import (
 	"context"
 
+	"route256/cart/internal/app/grpc/pb"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	cartpb "route256/cart/api/proto"
 )
 
-func (s *GrpcServer) List(ctx context.Context, request *cartpb.ListRequest) (*cartpb.ListResponse, error) {
+func (s *GrpcServer) List(ctx context.Context, request *pb.ListRequest) (*pb.ListResponse, error) {
 	items, totalPrice, err := s.service.GetItemsByUserId(ctx, request.User)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	response := &cartpb.ListResponse{
+	response := &pb.ListResponse{
 		TotalPrice: totalPrice,
-		Items:      make([]*cartpb.ListItemResponse, 0, len(items)),
+		Items:      make([]*pb.ListItemResponse, 0, len(items)),
 	}
 	for _, item := range items {
-		response.Items = append(response.Items, &cartpb.ListItemResponse{
+		response.Items = append(response.Items, &pb.ListItemResponse{
 			Sku:   item.Sku,
 			Count: item.Count,
 			Name:  item.Name,

@@ -3,13 +3,14 @@ package server
 import (
 	"context"
 
+	"route256/cart/internal/app/grpc/pb"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	cartpb "route256/cart/api/proto"
 )
 
-func (s *GrpcServer) Clear(ctx context.Context, request *cartpb.ClearRequest) (*emptypb.Empty, error) {
+func (s *GrpcServer) Clear(ctx context.Context, request *pb.ClearRequest) (*emptypb.Empty, error) {
 	err := s.service.DeleteItemsByUserId(ctx, request.User)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
