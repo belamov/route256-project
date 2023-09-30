@@ -16,7 +16,7 @@ test cart:
     - cd cart
     - go get github.com/boumenot/gocover-cobertura
     - go vet ./...
-    - go test -v -race -coverprofile profile.cov.tmp -covermode count ./...
+    - go test -v -coverprofile profile.cov.tmp -covermode count ./...
     - cat profile.cov.tmp | grep -v "_mock.go" | grep -v "pb.go" > cover.out
     - go tool cover -func cover.out
     - gocover-cobertura < cover.out > coverage.xml
@@ -46,10 +46,16 @@ test loms:
   script:
     - cd loms
     - go vet ./...
-    - go test -v -race -coverprofile profile.cov.tmp ./...
+    - go test -v -coverprofile profile.cov.tmp -covermode count ./...
     - cat profile.cov.tmp | grep -v "_mock.go" | grep -v "pb.go" > cover.out
     - go tool cover -func cover.out
+    - gocover-cobertura < cover.out > coverage.xml
   coverage: "/\\(statements\\)(?:\\s+)?(\\d+(?:\\.\\d+)?%)/"
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
 
 lint loms:
   stage: check
