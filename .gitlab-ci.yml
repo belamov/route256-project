@@ -12,20 +12,18 @@ stages:
 
 test cart:
   stage: check
-  before_script:
-    - go install github.com/boumenot/gocover-cobertura@latest
   script:
     - cd cart
     - go vet ./...
-    - go test -v -coverprofile=.testCoverageCart.txt -covermode count ./...
-  after_script:
-    - gocover-cobertura < .testCoverageCart.txt > coverageCart.xml
+    - go test -v -coverprofile=coverage.txt -covermode count ./...
+    - go get github.com/boumenot/gocover-cobertura
+    - go run github.com/boumenot/gocover-cobertura < coverage.txt > /$HOME/homecoverage.xml
   coverage: '/coverage: \d+.\d+% of statements/'
   artifacts:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: cart/coverageCart.xml
+        path: /$HOME/homecoverage.xml
 
 lint cart:
   stage: check
