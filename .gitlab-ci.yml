@@ -17,13 +17,14 @@ test cart:
     - go vet ./...
     - go test -v -coverprofile=coverage.txt -covermode count ./...
     - go get github.com/boumenot/gocover-cobertura
-    - go run github.com/boumenot/gocover-cobertura < coverage.txt > /$HOME/homecoverage.xml
+    - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
+    - cp coverage.xml ../coverageCart.xml
   coverage: '/coverage: \d+.\d+% of statements/'
   artifacts:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: /$HOME/homecoverage.xml
+        path: coverageCart.xml
 
 lint cart:
   stage: check
@@ -44,19 +45,16 @@ test loms:
   script:
     - cd loms
     - go vet ./...
-    - go test -v -coverprofile=.testCoverageLoms.txt -covermode count ./...
-    - pwd
-    - ls -la
-  after_script:
-    - pwd
-    - ls -la
-    - gocover-cobertura < .testCoverageLoms.txt > coverageLoms.xml
+    - go test -v -coverprofile=coverage.txt -covermode count ./...
+    - go get github.com/boumenot/gocover-cobertura
+    - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
+    - cp coverage.xml ../coverageLoms.xml
   coverage: '/coverage: \d+.\d+% of statements/'
   artifacts:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: loms/coverageLoms.xml
+        path: coverageLoms.xml
 
 lint loms:
   stage: check
