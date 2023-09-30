@@ -47,7 +47,11 @@ test loms:
     - cd loms
     - go vet ./...
     - go test -v -coverprofile=../testCoverageLoms.txt -covermode count ./...
+    - pwd
+    - ls -la
   after_script:
+    - pwd
+    - ls -la
     - gocover-cobertura < .testCoverageLoms.txt > coverageLoms.xml
   coverage: '/coverage: \d+.\d+% of statements/'
   artifacts:
