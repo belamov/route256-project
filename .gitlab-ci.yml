@@ -15,7 +15,7 @@ test cart:
     - cd cart
     - go vet ./...
     - go test -v -race -coverprofile profile.cov.tmp ./...
-    - cat profile.cov.tmp | grep -v "_mocks.go" | grep -v "pb.go" > cover.out
+    - cat profile.cov.tmp | grep -v "_mock.go" | grep -v "pb.go" > cover.out
     - go tool cover -func cover.out
   coverage: "/\\(statements\\)(?:\\s+)?(\\d+(?:\\.\\d+)?%)/"
 
@@ -40,7 +40,7 @@ test loms:
     - cd loms
     - go vet ./...
     - go test -v -race -coverprofile profile.cov.tmp ./...
-    - cat profile.cov.tmp | grep -v "_mocks.go" | grep -v "pb.go" > cover.out
+    - cat profile.cov.tmp | grep -v "_mock.go" | grep -v "pb.go" > cover.out
     - go tool cover -func cover.out
   coverage: "/\\(statements\\)(?:\\s+)?(\\d+(?:\\.\\d+)?%)/"
 
