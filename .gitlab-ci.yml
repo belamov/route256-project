@@ -17,7 +17,7 @@ test cart:
   script:
     - cd cart
     - go vet ./...
-    - go test -v -coverprofile=../testCoverageCart.txt -covermode count ./...
+    - go test -v -coverprofile=.testCoverageCart.txt -covermode count ./...
   after_script:
     - gocover-cobertura < .testCoverageCart.txt > coverageCart.xml
   coverage: '/coverage: \d+.\d+% of statements/'
@@ -25,7 +25,7 @@ test cart:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: coverageCart.xml
+        path: cart/coverageCart.xml
 
 lint cart:
   stage: check
@@ -46,7 +46,7 @@ test loms:
   script:
     - cd loms
     - go vet ./...
-    - go test -v -coverprofile=../testCoverageLoms.txt -covermode count ./...
+    - go test -v -coverprofile=.testCoverageLoms.txt -covermode count ./...
     - pwd
     - ls -la
   after_script:
@@ -58,7 +58,7 @@ test loms:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: coverageLoms.xml
+        path: loms/coverageLoms.xml
 
 lint loms:
   stage: check
