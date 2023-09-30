@@ -17,15 +17,15 @@ test cart:
   script:
     - cd cart
     - go vet ./...
-    - go test -v -coverprofile=.testCoverage.txt -covermode count ./...
+    - go test -v -coverprofile=../testCoverageCart.txt -covermode count ./...
   after_script:
-    - gocover-cobertura < .testCoverage.txt > coverage.xml
+    - gocover-cobertura < .testCoverageCart.txt > coverageCart.xml
   coverage: '/coverage: \d+.\d+% of statements/'
   artifacts:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: coverage.xml
+        path: coverageCart.xml
 
 lint cart:
   stage: check
@@ -46,15 +46,15 @@ test loms:
   script:
     - cd loms
     - go vet ./...
-    - go test -v -coverprofile=.testCoverage.txt -covermode count ./...
+    - go test -v -coverprofile=../testCoverageLoms.txt -covermode count ./...
   after_script:
-    - gocover-cobertura < .testCoverage.txt > coverage.xml
+    - gocover-cobertura < .testCoverageLoms.txt > coverageLoms.xml
   coverage: '/coverage: \d+.\d+% of statements/'
   artifacts:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: coverage.xml
+        path: coverageLoms.xml
 
 lint loms:
   stage: check
