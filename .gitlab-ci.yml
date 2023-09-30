@@ -9,13 +9,17 @@ stages:
   - check
   - build
 
+coverage:
+  coverage: "/coverage: \d+.\d+% of statements/"
+
 test cart:
   stage: check
   script:
     - cd cart
     - go vet ./...
-    - go test -v -race -cover ./...
-  coverage: "/coverage: \d+.\d+% of statements/"
+    - go test -v -race -coverprofile profile.cov.tmp ./...
+    - cat profile.cov.tmp | grep -v "_mocks.go" > cover.out
+    - go tool cover -func profile.cov
 
 
 lint cart:
@@ -37,8 +41,9 @@ test loms:
   script:
     - cd loms
     - go vet ./...
-    - go test -v -race ./...
-  coverage: "/coverage: \d+.\d+% of statements/"
+    - go test -v -race -coverprofile profile.cov.tmp ./...
+    - cat profile.cov.tmp | grep -v "_mocks.go" > cover.out
+    - go tool cover -func profile.cov
 
 lint loms:
   stage: check
