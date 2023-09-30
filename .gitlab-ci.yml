@@ -19,7 +19,7 @@ test cart:
     - go test -v -coverprofile profile.cov.tmp -covermode count ./...
     - cat profile.cov.tmp | grep -v "_mock.go" | grep -v "pb.go" > cover.out
     - go tool cover -func cover.out
-    - go get github.com/boumenot/gocover-cobertura
+    - go install github.com/boumenot/gocover-cobertura
     - gocover-cobertura < cover.out > coverage.xml
   coverage: "/\\(statements\\)(?:\\s+)?(\\d+(?:\\.\\d+)?%)/"
   artifacts:
@@ -50,7 +50,7 @@ test loms:
     - go test -v -coverprofile profile.cov.tmp -covermode count ./...
     - cat profile.cov.tmp | grep -v "_mock.go" | grep -v "pb.go" > cover.out
     - go tool cover -func cover.out
-    - go get github.com/boumenot/gocover-cobertura
+    - go install github.com/boumenot/gocover-cobertura
     - gocover-cobertura < cover.out > coverage.xml
   coverage: "/\\(statements\\)(?:\\s+)?(\\d+(?:\\.\\d+)?%)/"
   artifacts:
