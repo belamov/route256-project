@@ -12,16 +12,15 @@ stages:
 
 test cart:
   stage: check
+  before_script:
+    - go install github.com/boumenot/gocover-cobertura@latest
   script:
     - cd cart
-    - go get github.com/boumenot/gocover-cobertura
     - go vet ./...
-    - go test -v -coverprofile profile.cov.tmp -covermode count ./...
-    - cat profile.cov.tmp | grep -v "_mock.go" | grep -v "pb.go" > cover.out
-    - go tool cover -func cover.out
-    - go install github.com/boumenot/gocover-cobertura
-    - gocover-cobertura < cover.out > coverage.xml
-  coverage: "/\\(statements\\)(?:\\s+)?(\\d+(?:\\.\\d+)?%)/"
+    - go test -v -coverprofile=.testCoverage.txt -covermode count ./...
+  after_script:
+    - gocover-cobertura < .testCoverage.txt > coverage.xml
+  coverage: '/coverage: \d+.\d+% of statements/'
   artifacts:
     reports:
       coverage_report:
@@ -47,12 +46,10 @@ test loms:
   script:
     - cd loms
     - go vet ./...
-    - go test -v -coverprofile profile.cov.tmp -covermode count ./...
-    - cat profile.cov.tmp | grep -v "_mock.go" | grep -v "pb.go" > cover.out
-    - go tool cover -func cover.out
-    - go install github.com/boumenot/gocover-cobertura
-    - gocover-cobertura < cover.out > coverage.xml
-  coverage: "/\\(statements\\)(?:\\s+)?(\\d+(?:\\.\\d+)?%)/"
+    - go test -v -coverprofile=.testCoverage.txt -covermode count ./...
+  after_script:
+    - gocover-cobertura < .testCoverage.txt > coverage.xml
+  coverage: '/coverage: \d+.\d+% of statements/'
   artifacts:
     reports:
       coverage_report:
