@@ -14,7 +14,8 @@ test cart:
   script:
     - cd cart
     - go vet ./...
-    - go test -v -race ./...
+    - go test -v -race -cover ./...
+  coverage: "/coverage: \d+.\d+% of statements/"
 
 
 lint cart:
@@ -37,6 +38,7 @@ test loms:
     - cd loms
     - go vet ./...
     - go test -v -race ./...
+  coverage: "/coverage: \d+.\d+% of statements/"
 
 lint loms:
   stage: check
