@@ -1,62 +1,59 @@
-curdir=$(shell pwd)/../
+curdir=$(shell pwd)
 docker_bin := $(shell command -v docker 2> /dev/null)
-app := route256/cart
+docker_compose_bin := docker compose
+docker_compose_yml := docker/docker-compose.yml
+app := app
 user_id := $(shell id -u)
 
 check: build gofumpt lint protoc-gen test
 
 build:
-	$(docker_bin) build -t $(app) -f Dockerfile ../
+	$(docker_compose_bin) -f $(docker_compose_yml) build
+
+up: build
+	$(docker_compose_bin) -f $(docker_compose_yml) up
 
 test:
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && go test -v -race ./..."
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) go test -v -race ./...
 
 lint:
-	$(docker_bin) run --rm -v $(curdir):/app -w /app/cart golangci/golangci-lint:latest golangci-lint run
+	$(docker_bin) run --rm -v $(curdir):/app -w /app golangci/golangci-lint:latest golangci-lint run
 
 gofumpt:
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && gofumpt -l -w ."
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) gofumpt -l -w .
 
 fieldaligment-fix:
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && fieldalignment -fix ./internal/... || true"
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) fieldalignment -fix ./internal/... || true
+
+sqlc:
+	$(docker_bin) run --rm -v $(curdir):/src -w /src sqlc/sqlc generate
 
 mock:
-	rm -f internal/app/mocks/*
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && mockgen -destination=internal/app/services/cart_mock.go -package=services route256/cart/internal/app/services Cart"
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && mockgen -destination=internal/app/services/cart_provider_mock.go -package=services route256/cart/internal/app/services CartProvider"
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && mockgen -destination=internal/app/services/product_mock.go -package=services route256/cart/internal/app/services ProductService"
-	$(docker_bin) run --rm -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && mockgen -destination=internal/app/services/loms_mock.go -package=services route256/cart/internal/app/services LomsService"
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/cart_mock.go -package=services route256/cart/internal/app/services Cart
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/cart_provider_mock.go -package=services route256/cart/internal/app/services CartProvider
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/product_mock.go -package=services route256/cart/internal/app/services ProductService
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/loms_mock.go -package=services route256/cart/internal/app/services LomsService
 
 protoc-gen:
-	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && protoc --go_out=/usr/src/app/ --go-grpc_out=/usr/src/app/ --grpc-gateway_out=/usr/src/app/ --validate_out=lang=go:/usr/src/app/ -I /usr/src/app/cart/api/proto/ -I api/proto/ cart.proto"
-	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cp -r loms/api/proto/* cart/internal/app/grpc/clients/loms/pb/ && cd cart/internal/app/grpc/clients/loms/pb && protoc  --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative loms.proto"
-	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "cd cart && protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative internal/app/grpc/clients/product/pb/product.proto"
+	# pb for cart
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) protoc --go_out=. --go-grpc_out=. --grpc-gateway_out=. --validate_out=lang=go:. -I api/proto cart.proto
+	# pb for loms client with loms proto
+	mkdir -p internal/app/grpc/clients/loms/pb
+	cp -r ../loms/api/proto/* internal/app/grpc/clients/loms/pb
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) protoc  --go_out=internal/app/grpc/clients/loms/pb/ --go-grpc_out=internal/app/grpc/clients/loms/pb/ --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative -I internal/app/grpc/clients/loms/pb/ internal/app/grpc/clients/loms/pb/loms.proto
+	# pb for product
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative internal/app/grpc/clients/product/pb/product.proto
 
 vendor-proto-google-api:
-	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "\
-		rm -r vendor-proto/googleapis || true && \
-		rm -r cart/api/proto/google || true && \
-		git clone -b master --single-branch -n --depth=1 --filter=tree:0 \
-     		https://github.com/googleapis/googleapis vendor-proto/googleapis && \
-     	cd vendor-proto/googleapis && \
-    	git sparse-checkout set --no-cone google/api && \
-    	git checkout && \
-    	cd - && \
-    	mkdir -p  cart/api/proto/google/api && \
-    	mv vendor-proto/googleapis/google/api/annotations.proto cart/api/proto/google/api/annotations.proto && \
-    	mv vendor-proto/googleapis/google/api/http.proto cart/api/proto/google/api/http.proto && \
-    	rm -rf vendor-proto || true"
+	rm -rf vendor-proto || true
+	git clone -b master --single-branch --depth=1 https://github.com/googleapis/googleapis vendor-proto/googleapis
+	mkdir -p  api/proto/google/api
+	mv vendor-proto/googleapis/google/api/annotations.proto api/proto/google/api/annotations.proto
+	mv vendor-proto/googleapis/google/api/http.proto api/proto/google/api/http.proto
+	rm -rf vendor-proto
 
 vendor-proto-validate:
-	$(docker_bin) run --rm -u $(user_id) -v $(curdir):/usr/src/app/ $(app) sh -c "\
-		rm -r vendor-proto/validate || true && \
-		rm cart/api/proto/validate.proto || true && \
-		git clone -b main --single-branch --depth=2 --filter=tree:0 \
-		https://github.com/bufbuild/protoc-gen-validate vendor-proto/tmp && \
-		cd vendor-proto/tmp && \
-		git sparse-checkout set --no-cone validate && \
-		git checkout && \
-		cd - && \
-		mv vendor-proto/tmp/validate/validate.proto cart/api/proto/validate.proto && \
-		rm -rf vendor-proto || true"
-
+	rm -rf vendor-proto || true
+	git clone -b main --single-branch --depth=2 --filter=tree:0 https://github.com/bufbuild/protoc-gen-validate vendor-proto/tmp
+	mv vendor-proto/tmp/validate/validate.proto api/proto/validate.proto
+	rm -rf vendor-proto

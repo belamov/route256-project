@@ -1,0 +1,15 @@
+version: '3.5'
+
+services:
+  app:
+    image: route256/loms
+    container_name: loms
+    build:
+      context:  ../
+      dockerfile: docker/Dockerfile
+    command: /loms
+    volumes:
+      - ../:/usr/src/app/
+    ports:
+      - "8083:8083"
+      - "8080:8080"
