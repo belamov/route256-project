@@ -9,13 +9,22 @@ stages:
   - check
   - build
 
+
 test cart:
   stage: check
   script:
     - cd cart
     - go vet ./...
-    - go test -v -race ./...
-
+    - go test -v -coverprofile=coverage.txt -covermode count ./...
+    - go get github.com/boumenot/gocover-cobertura
+    - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
+    - cp coverage.xml ../coverageCart.xml
+  coverage: '/coverage: \d+.\d+% of statements/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverageCart.xml
 
 lint cart:
   stage: check
@@ -36,7 +45,16 @@ test loms:
   script:
     - cd loms
     - go vet ./...
-    - go test -v -race ./...
+    - go test -v -coverprofile=coverage.txt -covermode count ./...
+    - go get github.com/boumenot/gocover-cobertura
+    - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
+    - cp coverage.xml ../coverageLoms.xml
+  coverage: '/coverage: \d+.\d+% of statements/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverageLoms.xml
 
 lint loms:
   stage: check

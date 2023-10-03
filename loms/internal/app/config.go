@@ -9,9 +9,11 @@ import (
 )
 
 type Config struct {
-	ServerAddress              string        `default:"0.0.0.0:8080"`
-	AllowedOrderUnpaidTime     time.Duration `default:"1m"`
-	CancelUnpaidOrdersInterval time.Duration `default:"10m"`
+	HttpServerAddress          string        `default:"0.0.0.0:8080"`
+	GrpcServerAddress          string        `default:"0.0.0.0:8083"`
+	GrpcGatewayServerAddress   string        `default:"0.0.0.0:8084"`
+	AllowedOrderUnpaidTime     time.Duration `default:"10m"`
+	CancelUnpaidOrdersInterval time.Duration `default:"1m"`
 }
 
 func BuildConfig() *Config {
@@ -29,10 +31,14 @@ func BuildConfig() *Config {
 
 func (config Config) String() string {
 	return fmt.Sprintf(
-		"ServerAddress: %v\n"+
+		"HttpServerAddress: %v\n"+
+			"GrpcServerAddress: %v\n"+
+			"GrpcGatewayServerAddress: %v\n"+
 			"AllowedOrderUnpaidTime: %v\n"+
 			"CancelUnpaidOrdersInterval: %v\n",
-		config.ServerAddress,
+		config.HttpServerAddress,
+		config.GrpcServerAddress,
+		config.GrpcGatewayServerAddress,
 		config.AllowedOrderUnpaidTime,
 		config.CancelUnpaidOrdersInterval,
 	)

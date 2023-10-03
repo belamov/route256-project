@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package loms;
+
+option go_package="internal/app/grpc/pb";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "validate.proto";
+
+service Loms {
+  rpc OrderCreate(OrderCreateRequest) returns (OrderCreateResponse) {
+    option (google.api.http) = {
+      post: "/order/create"
+      body: "*"
+    };
+  };
+  rpc OrderInfo(OrderInfoRequest) returns (OrderInfoResponse) {
+    option (google.api.http) = {
+      post: "/order/info"
+      body: "*"
+    };
+  };
+  rpc OrderPay(OrderPayRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/order/pay"
+      body: "*"
+    };
+  };
+  rpc OrderCancel(OrderCancelRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/order/cancel"
+      body: "*"
+    };
+  };
+  rpc StockInfo(StockInfoRequest) returns (StockInfoResponse) {
+    option (google.api.http) = {
+      post: "/stock/info"
+      body: "*"
+    };
+  };
+}
+
+message OrderCreateRequest {
+  int64 user = 1 [(validate.rules).int64.gt = 0];
+  repeated OrderItemCreateRequest items = 2;
+}
+
+message OrderItemCreateRequest {
+  uint32 sku = 1 [(validate.rules).uint32.gt = 0];
+  uint64 count = 2 [(validate.rules).uint64.gt = 0];
+}
+
+message OrderCreateResponse {
+  int64 orderId = 1;
+}
+
+message OrderInfoRequest {
+  int64 orderId = 1 [(validate.rules).int64.gt = 0];
+}
+
+message OrderInfoResponse {
+  string status = 1;
+  int64 user = 2;
+  repeated OrderItemInfoResponse items = 3;
+
+}
+
+message OrderItemInfoResponse {
+  uint32 sku = 1;
+  uint64 count = 2;
+  string name = 3;
+  uint32 price = 4;
+}
+
+message OrderPayRequest {
+  int64 orderId = 1 [(validate.rules).int64.gt = 0];
+}
+
+message OrderCancelRequest {
+  int64 orderId = 1 [(validate.rules).int64.gt = 0];
+}
+
+message StockInfoRequest {
+  uint32 sku = 1 [(validate.rules).uint32.gt = 0];
+}
+
+message StockInfoResponse {
+  uint64 count = 1;
+}

@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package cart;
+
+option go_package="internal/app/grpc/pb";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "validate.proto";
+
+service Cart {
+  rpc AddItem(AddItemRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/cart/item/add"
+      body: "*"
+    };
+  };
+  rpc DeleteItem(DeleteItemRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/cart/item/delete"
+      body: "*"
+    };
+  };
+  rpc List(ListRequest) returns (ListResponse) {
+    option (google.api.http) = {
+      post: "/cart/list"
+      body: "*"
+    };
+  };
+  rpc Clear(ClearRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/cart/clear"
+      body: "*"
+    };
+  };
+  rpc Checkout(CheckoutRequest) returns (CheckoutResponse) {
+    option (google.api.http) = {
+      post: "/cart/checkout"
+      body: "*"
+    };
+  };
+}
+
+message AddItemRequest {
+  int64 user = 1 [(validate.rules).int64.gt = 0];
+  CartItemAddRequest item = 2;
+}
+
+message CartItemAddRequest {
+  int64 user = 1 [(validate.rules).int64.gt = 0];
+  uint32 sku = 2 [(validate.rules).uint32.gt = 0];
+  uint64 count = 3 [(validate.rules).uint64.gt = 0];
+}
+
+message DeleteItemRequest {
+  int64 user = 1 [(validate.rules).int64.gt = 0];
+  uint32 sku = 2 [(validate.rules).uint32.gt = 0];
+}
+
+message ListRequest {
+  int64 user = 1 [(validate.rules).int64.gt = 0];
+}
+
+message ListResponse {
+  uint32 total_price = 1 ;
+  repeated ListItemResponse items = 2;
+}
+
+message ListItemResponse {
+  uint32 sku = 1;
+  uint64 count = 2;
+  string name = 3;
+  uint32 price = 4;
+}
+
+message ClearRequest {
+  int64 user = 1 [(validate.rules).int64.gt = 0];
+}
+
+message CheckoutRequest {
+  int64 user = 1 [(validate.rules).int64.gt = 0];
+}
+
+message CheckoutResponse {
+  int64 orderID = 1;
+}

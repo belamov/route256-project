@@ -46,6 +46,9 @@ func (o *Order) ShouldBeCancelled(allowedOrderUnpaidTime time.Duration) bool {
 }
 
 type OrderItem struct {
-	Sku   int32
-	Count uint16
+	Name  string
+	User  int64
+	Sku   uint32
+	Price uint32
+	Count uint64
 }
