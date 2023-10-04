@@ -20,8 +20,8 @@ test cart:
     CART_DB_NAME: cart
     CART_DB_USER: postgres
     CART_DB_PASSWORD: password
-    CART_DB_HOST: db
-    GOOSE_DBSTRING: "user=postgres password=password host=localhost dbname=cart sslmode=disable"
+    CART_DB_HOST: postgres
+    GOOSE_DBSTRING: "user=postgres password=password host=postgres dbname=cart sslmode=disable"
   stage: check
   script:
     - go install github.com/pressly/goose/v3/cmd/goose@latest
