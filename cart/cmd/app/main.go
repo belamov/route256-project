@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"sync"
 
+	"route256/cart/internal/app/storage/repositories/cart"
+
 	"route256/cart/internal/app/http/handlers"
 
 	"route256/cart/internal/app"
@@ -41,7 +43,13 @@ func main() {
 	}
 	wg.Add(1)
 
-	cartProvider := services.NewMockCartProvider(nil)
+	cartProvider, err := cart.NewCartRepository(ctx, wg, config.DbUser, config.DbPassword, config.DbHost, config.DbName)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed init cart pg repository")
+		return
+	}
+	wg.Add(1)
+
 	cartService := services.NewCartService(productService, lomsService, cartProvider)
 
 	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, handlers.NewRouter(cartService))

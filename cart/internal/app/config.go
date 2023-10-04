@@ -15,6 +15,10 @@ type Config struct {
 	GrpcServerAddress        string `default:"localhost:8083"`
 	GrpcGatewayServerAddress string `default:"0.0.0.0:8084"`
 	LomsGrpcServiceUrl       string `default:"localhost:8083"`
+	DbUser                   string `default:"postgres"`
+	DbPassword               string `default:"password"`
+	DbHost                   string `default:"db:5432"`
+	DbName                   string `default:"cart"`
 }
 
 func BuildConfig() *Config {
@@ -38,7 +42,11 @@ func (config Config) String() string {
 			"LomsHttpServiceUrl: %v\n"+
 			"LomsGrpcServiceUrl: %v\n"+
 			"GrpcGatewayServerAddress: %v\n"+
-			"GrpcServerAddress: %v\n",
+			"GrpcServerAddress: %v\n"+
+			"DbHost: %v\n"+
+			"DbName: %v\n"+
+			"DbUser: %v\n"+
+			"DbPassword: %v\n",
 		config.HttpServerAddress,
 		config.ProductHttpServiceUrl,
 		config.ProductGrpcServiceUrl,
@@ -46,5 +54,9 @@ func (config Config) String() string {
 		config.LomsGrpcServiceUrl,
 		config.GrpcGatewayServerAddress,
 		config.GrpcServerAddress,
+		config.DbHost,
+		config.DbName,
+		config.DbUser,
+		config.DbPassword,
 	)
 }

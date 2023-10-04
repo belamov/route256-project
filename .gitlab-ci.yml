@@ -11,6 +11,14 @@ stages:
 
 
 test cart:
+  services:
+    - postgres:latest-alpine
+  variables:
+    POSTGRES_DB: cart
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: password
+    POSTGRES_HOST_AUTH_METHOD: trust
+    CART_DB_HOST: postgres
   stage: check
   script:
     - cd cart
