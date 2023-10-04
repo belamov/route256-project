@@ -14,10 +14,6 @@ services:
       - "8080:8080"
     environment:
       GOOSE_DRIVER: postgres
-      POSTGRES_DB: cart
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      DB_HOST: db
       GOOSE_DBSTRING: "user=postgres password=password host=db dbname=cart sslmode=disable"
     command: sh -c '/usr/src/app/docker/wait-for-it.sh -t 5 db:5432 -- /cart'
     depends_on:

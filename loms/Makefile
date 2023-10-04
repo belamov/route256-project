@@ -11,7 +11,10 @@ build:
 	$(docker_compose_bin) -f $(docker_compose_yml) build
 
 up: build
-	$(docker_compose_bin) -f $(docker_compose_yml) up
+	$(docker_compose_bin) -f $(docker_compose_yml) up -d
+
+down:
+	$(docker_compose_bin) -f $(docker_compose_yml) down -v
 
 test:
 	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) go test -v -race ./...
@@ -27,6 +30,10 @@ fieldaligment-fix:
 
 sqlc:
 	$(docker_bin) run --rm -v $(curdir):/src -w /src sqlc/sqlc generate
+
+migrate: #up
+	$(docker_compose_bin) -f $(docker_compose_yml) exec $(app) goose -dir internal/app/storage/migrations up
+	#$(docker_compose_bin) -f $(docker_compose_yml) stop
 
 mock:
 	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/cart_mock.go -package=services route256/cart/internal/app/services Cart
