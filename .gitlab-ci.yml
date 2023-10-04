@@ -16,12 +16,18 @@ test cart:
     POSTGRES_DB: cart
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: password
-    POSTGRES_HOST_AUTH_METHOD: trust
-    CART_DB_HOST: postgres
+    GOOSE_DRIVER: postgres
+    CART_DB_NAME: cart
+    CART_DB_USER: postgres
+    CART_DB_PASSWORD: password
+    CART_DB_HOST: db
+    GOOSE_DBSTRING: "user=postgres password=password host=db dbname=cart sslmode=disable"
   stage: check
   script:
+    - go install github.com/pressly/goose/v3/cmd/goose@latest
     - cd cart
     - go vet ./...
+    - goose -dir internal/app/storage/migrations up
     - go test -v -coverprofile=coverage.txt -covermode count ./...
     - go get github.com/boumenot/gocover-cobertura
     - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
