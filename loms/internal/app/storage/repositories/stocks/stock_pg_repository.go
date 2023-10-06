@@ -1,4 +1,4 @@
-package cart
+package stocks
 
 import (
 	"context"
@@ -9,55 +9,35 @@ import (
 	"route256/loms/internal/app/models"
 	"route256/loms/internal/app/services"
 	"route256/loms/internal/app/storage/repositories/stocks/queries"
-	"sync"
 )
 
 type stocksPgRepository struct {
-	q      *queries.Queries
 	dbPool *pgxpool.Pool
 }
 
-func NewStocksRepository(ctx context.Context, wg *sync.WaitGroup, user string, password string, host string, db string) (services.StocksProvider, error) {
-	databaseDSN := fmt.Sprintf("postgresql://%s:%s@%s/%s", user, password, host, db)
-	dbPool, err := pgxpool.New(ctx, databaseDSN)
-	if err != nil {
-		return nil, err
-	}
+type txKey struct{}
 
-	go func() {
-		<-ctx.Done()
-		log.Info().Msg("Closing order repository connections...")
-		dbPool.Close()
-		log.Info().Msg("Order repository connections closed")
-		wg.Done()
-	}()
-
+func NewStocksPgRepository(dbPool *pgxpool.Pool) services.StocksProvider {
 	return &stocksPgRepository{
-		q:      queries.New(dbPool),
 		dbPool: dbPool,
-	}, nil
+	}
 }
 
 func (s stocksPgRepository) Reserve(ctx context.Context, order models.Order) error {
-	tx, err := s.dbPool.Begin(ctx)
+	tx, err := s.beginTx(ctx)
 	if err != nil {
-		return err
+		log.Err(err).Msg("cannot begin transaction for reserving stocks")
+		return fmt.Errorf("cannot begin transaction for reserving stocks: %w", err)
 	}
 
-	defer func(tx pgx.Tx, ctx context.Context) {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			log.Err(err).Msg("cannot rollback transaction for reserving stocks")
-		}
-	}(tx, ctx)
+	q := queries.New(tx)
 
-	q := s.q.WithTx(tx)
 	for _, item := range order.Items {
-		params := queries.ReserveSkuParams{
+		params := queries.ChangeReserveOfSkuByAmountParams{
 			Count: int64(item.Count),
 			Sku:   int64(item.Sku),
 		}
-		err := q.ReserveSku(ctx, params)
+		err := q.ChangeReserveOfSkuByAmount(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -65,32 +45,28 @@ func (s stocksPgRepository) Reserve(ctx context.Context, order models.Order) err
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return err
+		log.Err(err).Msg("cannot commit transaction for reserving stocks")
+		return fmt.Errorf("cannot commit transaction for reserving stocks: %w", err)
 	}
 
 	return nil
 }
 
 func (s stocksPgRepository) ReserveRemove(ctx context.Context, order models.Order) error {
-	tx, err := s.dbPool.Begin(ctx)
+	tx, err := s.beginTx(ctx)
 	if err != nil {
-		return err
+		log.Err(err).Msg("cannot begin transaction for removing stocks")
+		return fmt.Errorf("cannot begin transaction for removing stocks: %w", err)
 	}
 
-	defer func(tx pgx.Tx, ctx context.Context) {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			log.Err(err).Msg("cannot rollback transaction for removing reserves")
-		}
-	}(tx, ctx)
+	q := queries.New(tx)
 
-	q := s.q.WithTx(tx)
 	for _, item := range order.Items {
-		params := queries.RemoveReserveSkuParams{
-			Count: int64(item.Count),
+		params := queries.ChangeReserveOfSkuByAmountParams{
+			Count: -int64(item.Count),
 			Sku:   int64(item.Sku),
 		}
-		err := q.RemoveReserveSku(ctx, params)
+		err := q.ChangeReserveOfSkuByAmount(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -98,22 +74,51 @@ func (s stocksPgRepository) ReserveRemove(ctx context.Context, order models.Orde
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return err
+		log.Err(err).Msg("cannot commit transaction for removing stocks")
+		return fmt.Errorf("cannot commit transaction for removing stocks: %w", err)
 	}
 
 	return nil
 }
 
 func (s stocksPgRepository) ReserveCancel(ctx context.Context, order models.Order) error {
-	//TODO implement me
-	panic("implement me")
+	return s.ReserveRemove(ctx, order)
 }
 
 func (s stocksPgRepository) GetBySku(ctx context.Context, sku uint32) (uint64, error) {
-	countFromDb, err := s.q.GetBySku(ctx, int64(sku))
+	q := s.getQueriesFromContext(ctx)
+	countFromDb, err := q.GetBySku(ctx, int64(sku))
 	if err != nil {
 		return 0, err
 	}
 
 	return uint64(countFromDb), nil
+}
+
+// beginTx begins new transaction if there is no outside transaction in context, otherwise it
+// begins pseudo nested transaction on outside transaction
+func (s stocksPgRepository) beginTx(ctx context.Context) (pgx.Tx, error) {
+	outsideTx := s.getTxFromContext(ctx)
+
+	if outsideTx == nil {
+		return s.dbPool.Begin(ctx)
+	}
+
+	return outsideTx.Begin(ctx)
+}
+
+func (s stocksPgRepository) getTxFromContext(ctx context.Context) pgx.Tx {
+	if tx, ok := ctx.Value(txKey{}).(*pgxpool.Tx); ok {
+		return tx
+	}
+
+	return nil
+}
+
+func (s stocksPgRepository) getQueriesFromContext(ctx context.Context) queries.Querier {
+	if tx, ok := ctx.Value(txKey{}).(*pgxpool.Tx); ok {
+		return queries.New(tx)
+	}
+
+	return queries.New(s.dbPool)
 }

@@ -9,10 +9,9 @@ import (
 )
 
 type Querier interface {
+	ChangeReserveOfSkuByAmount(ctx context.Context, arg ChangeReserveOfSkuByAmountParams) error
 	// noinspection SqlInsertValuesForFile
 	GetBySku(ctx context.Context, sku int64) (int64, error)
-	RemoveReserveSku(ctx context.Context, arg RemoveReserveSkuParams) error
-	ReserveSku(ctx context.Context, arg ReserveSkuParams) error
 }
 
 var _ Querier = (*Queries)(nil)

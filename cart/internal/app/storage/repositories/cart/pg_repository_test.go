@@ -2,9 +2,13 @@ package cart
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"sync"
 	"testing"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog/log"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,13 +30,43 @@ func TestPgRepositoryTestSuite(t *testing.T) {
 	suite.Run(t, new(PgRepositoryTestSuite))
 }
 
+func initPostgresDbConnection(ctx context.Context, wg *sync.WaitGroup, config *app.Config) (*pgxpool.Pool, error) {
+	databaseDSN := fmt.Sprintf(
+		"postgresql://%s:%s@%s/%s",
+		config.DbUser,
+		config.DbPassword,
+		config.DbHost,
+		config.DbName,
+	)
+	dbPool, err := pgxpool.New(ctx, databaseDSN)
+	if err != nil {
+		return nil, err
+	}
+	log.Info().Msg("Connected to postgres")
+
+	go func() {
+		<-ctx.Done()
+		log.Info().Msg("Closing order repository connections...")
+		dbPool.Close()
+		log.Info().Msg("Order repository connections closed")
+		wg.Done()
+	}()
+
+	return dbPool, nil
+}
+
 func (t *PgRepositoryTestSuite) SetupSuite() {
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := &sync.WaitGroup{}
+
 	config := app.BuildConfig()
-	repo, err := NewCartRepository(ctx, wg, config.DbUser, config.DbPassword, config.DbHost, config.DbName)
-	require.NoError(t.T(), err)
+
 	wg.Add(1)
+	dbPool, err := initPostgresDbConnection(ctx, wg, config)
+	require.NoError(t.T(), err)
+
+	repo := NewCartRepository(dbPool)
+	require.NoError(t.T(), err)
 	t.repo = repo
 	t.cancel = cancel
 	t.wg = wg

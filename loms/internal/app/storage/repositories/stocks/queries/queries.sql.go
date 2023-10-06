@@ -9,6 +9,20 @@ import (
 	"context"
 )
 
+const changeReserveOfSkuByAmount = `-- name: ChangeReserveOfSkuByAmount :exec
+update stocks set count = count+$1 where sku=$2
+`
+
+type ChangeReserveOfSkuByAmountParams struct {
+	Count int64 `json:"count"`
+	Sku   int64 `json:"sku"`
+}
+
+func (q *Queries) ChangeReserveOfSkuByAmount(ctx context.Context, arg ChangeReserveOfSkuByAmountParams) error {
+	_, err := q.db.Exec(ctx, changeReserveOfSkuByAmount, arg.Count, arg.Sku)
+	return err
+}
+
 const getBySku = `-- name: GetBySku :one
 select count from stocks where sku=$1
 `
@@ -19,32 +33,4 @@ func (q *Queries) GetBySku(ctx context.Context, sku int64) (int64, error) {
 	var count int64
 	err := row.Scan(&count)
 	return count, err
-}
-
-const removeReserveSku = `-- name: RemoveReserveSku :exec
-update stocks set count = count+$1 where sku=$2
-`
-
-type RemoveReserveSkuParams struct {
-	Count int64 `json:"count"`
-	Sku   int64 `json:"sku"`
-}
-
-func (q *Queries) RemoveReserveSku(ctx context.Context, arg RemoveReserveSkuParams) error {
-	_, err := q.db.Exec(ctx, removeReserveSku, arg.Count, arg.Sku)
-	return err
-}
-
-const reserveSku = `-- name: ReserveSku :exec
-update stocks set count = count-$1 where sku=$2
-`
-
-type ReserveSkuParams struct {
-	Count int64 `json:"count"`
-	Sku   int64 `json:"sku"`
-}
-
-func (q *Queries) ReserveSku(ctx context.Context, arg ReserveSkuParams) error {
-	_, err := q.db.Exec(ctx, reserveSku, arg.Count, arg.Sku)
-	return err
 }

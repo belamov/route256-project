@@ -2,38 +2,24 @@ package cart
 
 import (
 	"context"
-	"fmt"
-	"sync"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/rs/zerolog/log"
 	"route256/cart/internal/app/models"
 	"route256/cart/internal/app/services"
 	"route256/cart/internal/app/storage/repositories/cart/queries"
 )
 
 type pgRepository struct {
-	q queries.Querier
+	dbPool *pgxpool.Pool
 }
 
-func NewCartRepository(ctx context.Context, wg *sync.WaitGroup, user string, password string, host string, db string) (services.CartProvider, error) {
-	databaseDSN := fmt.Sprintf("postgresql://%s:%s@%s/%s", user, password, host, db)
-	dbPool, err := pgxpool.New(ctx, databaseDSN)
-	if err != nil {
-		return nil, err
-	}
+type txKey struct{}
 
-	go func() {
-		<-ctx.Done()
-		log.Info().Msg("Closing cart repository connections...")
-		dbPool.Close()
-		log.Info().Msg("Cart repository connections closed")
-		wg.Done()
-	}()
-
+func NewCartRepository(dbPool *pgxpool.Pool) services.CartProvider {
 	return &pgRepository{
-		q: queries.New(dbPool),
-	}, nil
+		dbPool: dbPool,
+	}
 }
 
 func (c pgRepository) SaveItem(ctx context.Context, item models.CartItem) error {
@@ -43,7 +29,7 @@ func (c pgRepository) SaveItem(ctx context.Context, item models.CartItem) error 
 		UserID: item.User,
 	}
 
-	return c.q.SaveCartItem(ctx, params)
+	return c.getQueriesFromContext(ctx).SaveCartItem(ctx, params)
 }
 
 func (c pgRepository) DeleteItem(ctx context.Context, item models.CartItem) error {
@@ -52,11 +38,11 @@ func (c pgRepository) DeleteItem(ctx context.Context, item models.CartItem) erro
 		Sku:    int64(item.Sku),
 	}
 
-	return c.q.DeleteCartItem(ctx, params)
+	return c.getQueriesFromContext(ctx).DeleteCartItem(ctx, params)
 }
 
 func (c pgRepository) GetItemsByUserId(ctx context.Context, userId int64) ([]models.CartItem, error) {
-	itemsFromBd, err := c.q.GetCartItemsByUserId(ctx, userId)
+	itemsFromBd, err := c.getQueriesFromContext(ctx).GetCartItemsByUserId(ctx, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -74,5 +60,21 @@ func (c pgRepository) GetItemsByUserId(ctx context.Context, userId int64) ([]mod
 }
 
 func (c pgRepository) DeleteItemsByUserId(ctx context.Context, userId int64) error {
-	return c.q.DeleteCartItemsByUserId(ctx, userId)
+	return c.getQueriesFromContext(ctx).DeleteCartItemsByUserId(ctx, userId)
+}
+
+func (c pgRepository) getTxFromContext(ctx context.Context) pgx.Tx {
+	if tx, ok := ctx.Value(txKey{}).(*pgxpool.Tx); ok {
+		return tx
+	}
+
+	return nil
+}
+
+func (c pgRepository) getQueriesFromContext(ctx context.Context) queries.Querier {
+	if tx, ok := ctx.Value(txKey{}).(*pgxpool.Tx); ok {
+		return queries.New(tx)
+	}
+
+	return queries.New(c.dbPool)
 }

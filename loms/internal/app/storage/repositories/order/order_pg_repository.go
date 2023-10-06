@@ -1,40 +1,22 @@
-package cart
+package order
 
 import (
 	"context"
-	"fmt"
 	"route256/loms/internal/app/models"
 	"route256/loms/internal/app/services"
-	"route256/loms/internal/app/storage/repositories/order/queries"
-	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/rs/zerolog/log"
 )
 
 type orderPgRepository struct {
-	q queries.Querier
+	dbPool *pgxpool.Pool
 }
 
-func NewOrderRepository(ctx context.Context, wg *sync.WaitGroup, user string, password string, host string, db string) (services.OrdersProvider, error) {
-	databaseDSN := fmt.Sprintf("postgresql://%s:%s@%s/%s", user, password, host, db)
-	dbPool, err := pgxpool.New(ctx, databaseDSN)
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		<-ctx.Done()
-		log.Info().Msg("Closing order repository connections...")
-		dbPool.Close()
-		log.Info().Msg("Order repository connections closed")
-		wg.Done()
-	}()
-
+func NewOrderRepository(dbPool *pgxpool.Pool) services.OrdersProvider {
 	return &orderPgRepository{
-		q: queries.New(dbPool),
-	}, nil
+		dbPool: dbPool,
+	}
 }
 
 func (o *orderPgRepository) Create(ctx context.Context, userId int64, statusNew models.OrderStatus, items []models.OrderItem) (models.Order, error) {

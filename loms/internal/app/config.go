@@ -14,6 +14,10 @@ type Config struct {
 	GrpcGatewayServerAddress   string        `default:"0.0.0.0:8084"`
 	AllowedOrderUnpaidTime     time.Duration `default:"10m"`
 	CancelUnpaidOrdersInterval time.Duration `default:"1m"`
+	DbUser                     string        `default:"postgres" split_words:"true"`
+	DbPassword                 string        `default:"password" split_words:"true"`
+	DbHost                     string        `default:"db:5432" split_words:"true"`
+	DbName                     string        `default:"cart" split_words:"true"`
 }
 
 func BuildConfig() *Config {
@@ -35,11 +39,19 @@ func (config Config) String() string {
 			"GrpcServerAddress: %v\n"+
 			"GrpcGatewayServerAddress: %v\n"+
 			"AllowedOrderUnpaidTime: %v\n"+
-			"CancelUnpaidOrdersInterval: %v\n",
+			"CancelUnpaidOrdersInterval: %v\n"+
+			"DbHost: %v\n"+
+			"DbName: %v\n"+
+			"DbUser: %v\n"+
+			"DbPassword: %v\n",
 		config.HttpServerAddress,
 		config.GrpcServerAddress,
 		config.GrpcGatewayServerAddress,
 		config.AllowedOrderUnpaidTime,
 		config.CancelUnpaidOrdersInterval,
+		config.DbHost,
+		config.DbName,
+		config.DbUser,
+		config.DbPassword,
 	)
 }
