@@ -12,7 +12,9 @@ build:
 
 up: build
 	$(docker_compose_bin) -f $(docker_compose_yml) up -d
-	$(docker_compose_bin) -f $(docker_compose_yml) exec $(app) goose -dir internal/app/storage/migrations up
+
+down:
+	$(docker_compose_bin) -f $(docker_compose_yml) down -v
 
 stop:
 	$(docker_compose_bin) -f $(docker_compose_yml) stop

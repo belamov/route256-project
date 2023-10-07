@@ -17,7 +17,7 @@ type Config struct {
 	DbUser                     string        `default:"postgres" split_words:"true"`
 	DbPassword                 string        `default:"password" split_words:"true"`
 	DbHost                     string        `default:"db:5432" split_words:"true"`
-	DbName                     string        `default:"cart" split_words:"true"`
+	DbName                     string        `default:"loms" split_words:"true"`
 }
 
 func BuildConfig() *Config {

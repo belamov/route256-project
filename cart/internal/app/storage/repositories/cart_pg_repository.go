@@ -1,13 +1,13 @@
-package cart
+package repositories
 
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
+	queries2 "route256/cart/internal/app/storage/repositories/queries"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"route256/cart/internal/app/models"
 	"route256/cart/internal/app/services"
-	"route256/cart/internal/app/storage/repositories/cart/queries"
 )
 
 type pgRepository struct {
@@ -23,7 +23,7 @@ func NewCartRepository(dbPool *pgxpool.Pool) services.CartProvider {
 }
 
 func (c pgRepository) SaveItem(ctx context.Context, item models.CartItem) error {
-	params := queries.SaveCartItemParams{
+	params := queries2.SaveCartItemParams{
 		Sku:    int64(item.Sku),
 		Count:  int64(item.Count),
 		UserID: item.User,
@@ -33,7 +33,7 @@ func (c pgRepository) SaveItem(ctx context.Context, item models.CartItem) error 
 }
 
 func (c pgRepository) DeleteItem(ctx context.Context, item models.CartItem) error {
-	params := queries.DeleteCartItemParams{
+	params := queries2.DeleteCartItemParams{
 		UserID: item.User,
 		Sku:    int64(item.Sku),
 	}
@@ -63,18 +63,10 @@ func (c pgRepository) DeleteItemsByUserId(ctx context.Context, userId int64) err
 	return c.getQueriesFromContext(ctx).DeleteCartItemsByUserId(ctx, userId)
 }
 
-func (c pgRepository) getTxFromContext(ctx context.Context) pgx.Tx {
+func (c pgRepository) getQueriesFromContext(ctx context.Context) queries2.Querier {
 	if tx, ok := ctx.Value(txKey{}).(*pgxpool.Tx); ok {
-		return tx
+		return queries2.New(tx)
 	}
 
-	return nil
-}
-
-func (c pgRepository) getQueriesFromContext(ctx context.Context) queries.Querier {
-	if tx, ok := ctx.Value(txKey{}).(*pgxpool.Tx); ok {
-		return queries.New(tx)
-	}
-
-	return queries.New(c.dbPool)
+	return queries2.New(c.dbPool)
 }

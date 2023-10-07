@@ -5,7 +5,7 @@ docker_compose_yml := docker/docker-compose.yml
 app := app
 user_id := $(shell id -u)
 
-check: build gofumpt lint protoc-gen test
+check: build gofumpt lint protoc-gen sqlc test
 
 build:
 	$(docker_compose_bin) -f $(docker_compose_yml) build
@@ -31,9 +31,9 @@ fieldaligment-fix:
 sqlc:
 	$(docker_bin) run --rm -v $(curdir):/src -w /src sqlc/sqlc generate
 
-migrate: #up
+migrate: up
 	$(docker_compose_bin) -f $(docker_compose_yml) exec $(app) goose -dir internal/app/storage/migrations up
-	#$(docker_compose_bin) -f $(docker_compose_yml) stop
+	$(docker_compose_bin) -f $(docker_compose_yml) stop
 
 mock:
 	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/cart_mock.go -package=services route256/cart/internal/app/services Cart

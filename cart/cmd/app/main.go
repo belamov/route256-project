@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"sync"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"route256/cart/internal/app/storage/repositories"
 
-	"route256/cart/internal/app/storage/repositories/cart"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"route256/cart/internal/app/http/handlers"
 
@@ -53,7 +53,7 @@ func main() {
 		return
 	}
 
-	cartProvider := cart.NewCartRepository(dbPool)
+	cartProvider := repositories.NewCartRepository(dbPool)
 
 	cartService := services.NewCartService(productService, lomsService, cartProvider)
 

@@ -4,8 +4,6 @@
 
 package queries
 
-import ()
-
 type CartItem struct {
 	ID     int64 `json:"id"`
 	Sku    int64 `json:"sku"`

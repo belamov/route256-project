@@ -1,24 +1,13 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "internal/app/storage/repositories/order/queries.sql"
+    queries: "internal/app/storage/repositories/queries.sql"
     schema: "internal/app/storage/migrations"
     gen:
       go:
         package: "queries"
         sql_package: "pgx/v5"
-        out: "internal/app/storage/repositories/order/queries"
-        emit_json_tags: true
-        emit_interface: true
-        omit_unused_structs: true
-  - engine: "postgresql"
-    queries: "internal/app/storage/repositories/stocks/queries.sql"
-    schema: "internal/app/storage/migrations"
-    gen:
-      go:
-        package: "queries"
-        sql_package: "pgx/v5"
-        out: "internal/app/storage/repositories/stocks/queries"
+        out: "internal/app/storage/repositories/queries"
         emit_json_tags: true
         emit_interface: true
         omit_unused_structs: true

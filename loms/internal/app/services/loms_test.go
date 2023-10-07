@@ -44,7 +44,7 @@ func (ts *LomsTestSuite) SetupSuite() {
 	ts.mockCtrl = gomock.NewController(Reporter{ts.T()})
 	ts.mockStocksProvider = NewMockStocksProvider(ts.mockCtrl)
 	ts.mockOrdersProvider = NewMockOrdersProvider(ts.mockCtrl)
-	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider, DefaultAllowedOrderUnpaidTime)
+	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider, DefaultAllowedOrderUnpaidTime, MockTransactor{})
 }
 
 func TestLomsTestSuite(t *testing.T) {
@@ -118,7 +118,7 @@ func (ts *LomsTestSuite) TestCreateOrderInsufficientStocks() {
 
 	order, err := ts.loms.OrderCreate(ctx, userId, orderItems)
 	assert.ErrorIs(ts.T(), err, ErrInsufficientStocks)
-	assert.Equal(ts.T(), models.Order{}, order)
+	assert.Equal(ts.T(), newOrder, order)
 }
 
 func (ts *LomsTestSuite) TestGetOrderById() {

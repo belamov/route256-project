@@ -2,8 +2,9 @@
 -- +goose StatementBegin
 create table stocks (
  id bigserial primary key,
- sku bigint not null,
- count bigint not null
+ sku bigint not null unique,
+ count bigint not null,
+ constraint count_nonnegative check (stocks.count >= 0)
 );
 -- +goose StatementEnd
 
