@@ -5,7 +5,7 @@ docker_compose_yml := docker/docker-compose.yml
 app := app
 user_id := $(shell id -u)
 
-check: build gofumpt lint protoc-gen test
+check: build gofumpt lint protoc-gen sqlc test
 
 build:
 	$(docker_compose_bin) -f $(docker_compose_yml) build

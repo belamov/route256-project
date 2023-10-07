@@ -3,7 +3,7 @@ package repositories
 import (
 	"context"
 
-	queries2 "route256/cart/internal/app/storage/repositories/queries"
+	"route256/cart/internal/app/storage/repositories/queries"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"route256/cart/internal/app/models"
@@ -14,8 +14,6 @@ type pgRepository struct {
 	dbPool *pgxpool.Pool
 }
 
-type txKey struct{}
-
 func NewCartRepository(dbPool *pgxpool.Pool) services.CartProvider {
 	return &pgRepository{
 		dbPool: dbPool,
@@ -23,26 +21,26 @@ func NewCartRepository(dbPool *pgxpool.Pool) services.CartProvider {
 }
 
 func (c pgRepository) SaveItem(ctx context.Context, item models.CartItem) error {
-	params := queries2.SaveCartItemParams{
+	params := queries.SaveCartItemParams{
 		Sku:    int64(item.Sku),
 		Count:  int64(item.Count),
 		UserID: item.User,
 	}
 
-	return c.getQueriesFromContext(ctx).SaveCartItem(ctx, params)
+	return queries.New(c.dbPool).SaveCartItem(ctx, params)
 }
 
 func (c pgRepository) DeleteItem(ctx context.Context, item models.CartItem) error {
-	params := queries2.DeleteCartItemParams{
+	params := queries.DeleteCartItemParams{
 		UserID: item.User,
 		Sku:    int64(item.Sku),
 	}
 
-	return c.getQueriesFromContext(ctx).DeleteCartItem(ctx, params)
+	return queries.New(c.dbPool).DeleteCartItem(ctx, params)
 }
 
 func (c pgRepository) GetItemsByUserId(ctx context.Context, userId int64) ([]models.CartItem, error) {
-	itemsFromBd, err := c.getQueriesFromContext(ctx).GetCartItemsByUserId(ctx, userId)
+	itemsFromBd, err := queries.New(c.dbPool).GetCartItemsByUserId(ctx, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -60,13 +58,5 @@ func (c pgRepository) GetItemsByUserId(ctx context.Context, userId int64) ([]mod
 }
 
 func (c pgRepository) DeleteItemsByUserId(ctx context.Context, userId int64) error {
-	return c.getQueriesFromContext(ctx).DeleteCartItemsByUserId(ctx, userId)
-}
-
-func (c pgRepository) getQueriesFromContext(ctx context.Context) queries2.Querier {
-	if tx, ok := ctx.Value(txKey{}).(*pgxpool.Tx); ok {
-		return queries2.New(tx)
-	}
-
-	return queries2.New(c.dbPool)
+	return queries.New(c.dbPool).DeleteCartItemsByUserId(ctx, userId)
 }

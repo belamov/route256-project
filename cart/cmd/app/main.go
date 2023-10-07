@@ -2,14 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"sync"
 
 	"route256/cart/internal/app/storage/repositories"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"route256/cart/internal/app/http/handlers"
 
@@ -47,7 +44,7 @@ func main() {
 	}
 
 	wg.Add(1)
-	dbPool, err := initPostgresDbConnection(ctx, wg, config)
+	dbPool, err := repositories.InitPostgresDbConnection(ctx, wg, config)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot initialize connection to postgres")
 		return
@@ -69,29 +66,4 @@ func main() {
 	wg.Wait()
 
 	log.Info().Msg("goodbye")
-}
-
-func initPostgresDbConnection(ctx context.Context, wg *sync.WaitGroup, config *app.Config) (*pgxpool.Pool, error) {
-	databaseDSN := fmt.Sprintf(
-		"postgresql://%s:%s@%s/%s",
-		config.DbUser,
-		config.DbPassword,
-		config.DbHost,
-		config.DbName,
-	)
-	dbPool, err := pgxpool.New(ctx, databaseDSN)
-	if err != nil {
-		return nil, err
-	}
-	log.Info().Msg("Connected to postgres")
-
-	go func() {
-		<-ctx.Done()
-		log.Info().Msg("Closing order repository connections...")
-		dbPool.Close()
-		log.Info().Msg("Order repository connections closed")
-		wg.Done()
-	}()
-
-	return dbPool, nil
 }
