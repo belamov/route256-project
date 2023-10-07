@@ -9,4 +9,5 @@ sql:
         sql_package: "pgx/v5"
         out: "internal/app/storage/repositories/queries"
         emit_json_tags: true
+        emit_interface: true
         omit_unused_structs: true

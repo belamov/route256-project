@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 
 	"route256/cart/internal/app/storage/repositories"
 
@@ -26,7 +27,7 @@ func main() {
 
 	config := app.BuildConfig()
 
-	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)

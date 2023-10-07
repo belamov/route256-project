@@ -35,6 +35,7 @@ func main() {
 	stockPgRepository := repositories.NewStocksPgRepository(dbPool)
 	orderPgRepository := repositories.NewOrderPgRepository(dbPool)
 	pgTransactor := repositories.NewPgTransactor(dbPool)
+
 	lomsService := services.NewLomsService(orderPgRepository, stockPgRepository, config.AllowedOrderUnpaidTime, pgTransactor)
 
 	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, lomsService)

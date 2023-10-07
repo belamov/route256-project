@@ -66,19 +66,15 @@ func (pt *PgTransactor) WithinTransaction(ctx context.Context, tFunc func(ctx co
 
 	err = tFunc(pt.injectTx(ctx, tx))
 	if err != nil {
-		// if error, rollback
-		errRollback := tx.Rollback(ctx)
-		if errRollback != nil && !errors.Is(errRollback, pgx.ErrTxClosed) {
-			log.Err(errRollback).Msg("cannot rollback transaction")
-			return err
-		}
+		return err
 	}
-	// if no error, commit
+
 	err = tx.Commit(ctx)
 	if err != nil {
 		log.Err(err).Msg("cannot commit transaction")
 		return err
 	}
+
 	return nil
 }
 
