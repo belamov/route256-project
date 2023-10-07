@@ -58,10 +58,10 @@ test loms:
     POSTGRES_DB: cart
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: password
-    CART_DB_NAME: loms
-    CART_DB_USER: postgres
-    CART_DB_PASSWORD: password
-    CART_DB_HOST: postgres
+    LOMS_DB_NAME: loms
+    LOMS_DB_USER: postgres
+    LOMS_DB_PASSWORD: password
+    LOMS_DB_HOST: postgres
     GOOSE_DRIVER: postgres
     GOOSE_DBSTRING: "user=postgres password=password host=postgres dbname=loms sslmode=disable"
   stage: check
