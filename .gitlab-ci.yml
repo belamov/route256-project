@@ -55,7 +55,7 @@ test loms:
   services:
     - postgres:latest
   variables:
-    POSTGRES_DB: cart
+    POSTGRES_DB: loms
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: password
     LOMS_DB_NAME: loms
