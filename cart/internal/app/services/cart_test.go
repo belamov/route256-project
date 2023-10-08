@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"route256/cart/internal/app/models"
 	"strconv"
 	"testing"
-
-	"route256/cart/internal/app/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -233,4 +232,123 @@ func (ts *CartTestSuite) TestDeleteItemsByUserIdNoUser() {
 	var userId int64 = 0
 	err := ts.cart.DeleteItemsByUserId(ctx, userId)
 	assert.Error(ts.T(), err)
+}
+
+// go test -bench=. -benchmem -cpuprofile=../../../testdata/list_bench/base/cpu.out -memprofile=../../../testdata/list_bench/base/mem.out -o ../../../testdata/list_bench/base/ .
+func BenchmarkCart_GetItemsByUserId(b *testing.B) {
+	ctrl := gomock.NewController(b)
+	mockCartStorage := NewMockCartProvider(ctrl)
+	mockLomsService := NewMockLomsService(ctrl)
+	mockProductService := NewMockProductService(ctrl)
+
+	info := models.CartItemInfo{
+		Name:  "some name",
+		Sku:   uint32(20),
+		Price: 100,
+	}
+	var userId int64 = 50
+
+	mockProductService.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(info, nil).AnyTimes()
+	service := NewCartService(mockProductService, mockLomsService, mockCartStorage)
+
+	cartWith1item := make([]models.CartItem, 1)
+	for j := 0; j < len(cartWith1item); j++ {
+		cartWith1item[j] = models.CartItem{
+			User:  userId,
+			Sku:   123,
+			Count: uint64(j),
+		}
+	}
+
+	b.Run(fmt.Sprintf("Get Cart List With %d items", len(cartWith1item)), func(b *testing.B) {
+		mockCartStorage.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartWith1item, nil).Times(b.N)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_, _, err := service.GetItemsByUserId(context.Background(), userId)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+
+	cartWith2items := make([]models.CartItem, 2)
+	for j := 0; j < len(cartWith2items); j++ {
+		cartWith2items[j] = models.CartItem{
+			User:  userId,
+			Sku:   123,
+			Count: uint64(j),
+		}
+	}
+
+	b.Run(fmt.Sprintf("Get Cart List With %d items", len(cartWith2items)), func(b *testing.B) {
+		mockCartStorage.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartWith2items, nil).Times(b.N)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_, _, err := service.GetItemsByUserId(context.Background(), userId)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+
+	cartWith5items := make([]models.CartItem, 5)
+	for j := 0; j < len(cartWith5items); j++ {
+		cartWith5items[j] = models.CartItem{
+			User:  userId,
+			Sku:   123,
+			Count: uint64(j),
+		}
+	}
+
+	b.Run(fmt.Sprintf("Get Cart List With %d items", len(cartWith5items)), func(b *testing.B) {
+		mockCartStorage.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartWith5items, nil).Times(b.N)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_, _, err := service.GetItemsByUserId(context.Background(), userId)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+
+	cartWith10items := make([]models.CartItem, 10)
+	for j := 0; j < len(cartWith10items); j++ {
+		cartWith10items[j] = models.CartItem{
+			User:  userId,
+			Sku:   123,
+			Count: uint64(j),
+		}
+	}
+
+	b.Run(fmt.Sprintf("Get Cart List With %d items", len(cartWith10items)), func(b *testing.B) {
+		mockCartStorage.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartWith10items, nil).Times(b.N)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_, _, err := service.GetItemsByUserId(context.Background(), userId)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+
+	cartWith20items := make([]models.CartItem, 20)
+	for j := 0; j < len(cartWith20items); j++ {
+		cartWith20items[j] = models.CartItem{
+			User:  userId,
+			Sku:   123,
+			Count: uint64(j),
+		}
+	}
+
+	b.Run(fmt.Sprintf("Get Cart List With %d items", len(cartWith20items)), func(b *testing.B) {
+		mockCartStorage.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartWith20items, nil).Times(b.N)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_, _, err := service.GetItemsByUserId(context.Background(), userId)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+
 }
