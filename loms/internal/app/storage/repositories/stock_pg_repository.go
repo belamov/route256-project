@@ -74,7 +74,13 @@ func (s StocksPgRepository) Reserve(ctx context.Context, order models.Order) err
 	return nil
 }
 
+// ReserveRemove в текущей реализации метод ничего полезного не делает, так как стоки уже зарезервированы
+// и мы храним только доступное количество стоков, без разделения на зарезервированные и нет
 func (s StocksPgRepository) ReserveRemove(ctx context.Context, order models.Order) error {
+	return nil
+}
+
+func (s StocksPgRepository) ReserveCancel(ctx context.Context, order models.Order) error {
 	tx, err := s.transactions.beginTx(ctx, s.dbPool)
 	if err != nil {
 		log.Err(err).Msg("cannot begin transaction for removing stocks")
@@ -110,10 +116,6 @@ func (s StocksPgRepository) ReserveRemove(ctx context.Context, order models.Orde
 	}
 
 	return nil
-}
-
-func (s StocksPgRepository) ReserveCancel(ctx context.Context, order models.Order) error {
-	return s.ReserveRemove(ctx, order)
 }
 
 func (s StocksPgRepository) GetBySku(ctx context.Context, sku uint32) (uint64, error) {

@@ -85,7 +85,7 @@ func (t *StockPgRepositoryTestSuite) TestRepository() {
 	assert.NoError(t.T(), err)
 	assert.Equal(t.T(), initialStockCount-1, count)
 
-	err = t.repo.ReserveRemove(ctx, order)
+	err = t.repo.ReserveCancel(ctx, order)
 	assert.NoError(t.T(), err)
 
 	count, err = t.repo.GetBySku(ctx, sku)
