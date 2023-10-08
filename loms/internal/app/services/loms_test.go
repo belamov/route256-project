@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"route256/loms/internal/app/storage"
+
 	"route256/loms/internal/app/models"
 
 	"github.com/stretchr/testify/assert"
@@ -113,7 +115,7 @@ func (ts *LomsTestSuite) TestCreateOrderInsufficientStocks() {
 	}
 
 	ts.mockOrdersProvider.EXPECT().Create(ctx, userId, gomock.Any(), orderItems).Return(newOrder, nil)
-	ts.mockStocksProvider.EXPECT().Reserve(ctx, gomock.Any()).Return(ErrInsufficientStocks)
+	ts.mockStocksProvider.EXPECT().Reserve(ctx, gomock.Any()).Return(storage.ErrInsufficientStocks)
 	ts.mockOrdersProvider.EXPECT().SetStatus(ctx, gomock.Any(), gomock.Any()).Return(failedOrder, nil)
 
 	order, err := ts.loms.OrderCreate(ctx, userId, orderItems)

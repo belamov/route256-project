@@ -52,14 +52,14 @@ func (t *PgTransactionsTestSuite) TearDownSuite() {
 func (t *PgTransactionsTestSuite) TestTransactions() {
 	ctx := context.Background()
 
-	var notFoundSku uint32 = 1
+	var sku uint32 = 1
 
 	order := models.Order{
 		CreatedAt: time.Now(),
 		Items: []models.OrderItem{{
 			Name:  "sku",
 			User:  1,
-			Sku:   notFoundSku,
+			Sku:   sku,
 			Price: 10,
 			Count: 1,
 		}},
@@ -74,7 +74,7 @@ func (t *PgTransactionsTestSuite) TestTransactions() {
 		updatedOrder, err := t.ordersRepo.SetStatus(ctx, createdOrder, models.OrderStatusAwaitingPayment)
 		assert.NoError(t.T(), err)
 
-		_, err = t.stocksRepo.dbPool.Exec(ctx, "delete from stocks where sku = $1", int(notFoundSku))
+		_, err = t.stocksRepo.dbPool.Exec(ctx, "delete from stocks where sku = $1", int(sku))
 		assert.NoError(t.T(), err)
 
 		err = t.stocksRepo.Reserve(ctx, updatedOrder)
@@ -86,4 +86,21 @@ func (t *PgTransactionsTestSuite) TestTransactions() {
 	fetchedOrder, err := t.ordersRepo.GetOrderByOrderId(ctx, createdOrder.Id)
 	assert.NoError(t.T(), err)
 	assert.Equal(t.T(), fetchedOrder.Status, models.OrderStatusNew)
+
+	err = t.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		updatedOrder, err := t.ordersRepo.SetStatus(ctx, createdOrder, models.OrderStatusAwaitingPayment)
+		assert.NoError(t.T(), err)
+
+		_, err = t.stocksRepo.dbPool.Exec(ctx, "insert into stocks (sku, count)  values ($1, 100)", int(sku))
+		assert.NoError(t.T(), err)
+
+		err = t.stocksRepo.Reserve(ctx, updatedOrder)
+		assert.NoError(t.T(), err)
+		return err
+	})
+	assert.NoError(t.T(), err)
+
+	fetchedOrder, err = t.ordersRepo.GetOrderByOrderId(ctx, createdOrder.Id)
+	assert.NoError(t.T(), err)
+	assert.Equal(t.T(), fetchedOrder.Status, models.OrderStatusAwaitingPayment)
 }

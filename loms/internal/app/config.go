@@ -14,10 +14,10 @@ type Config struct {
 	GrpcGatewayServerAddress   string        `default:"0.0.0.0:8084" split_words:"true"`
 	AllowedOrderUnpaidTime     time.Duration `default:"10m" split_words:"true"`
 	CancelUnpaidOrdersInterval time.Duration `default:"1m" split_words:"true"`
-	DbUser                     string        `default:"postgres" split_words:"true" split_words:"true"`
-	DbPassword                 string        `default:"password" split_words:"true" split_words:"true"`
-	DbHost                     string        `default:"db:5432" split_words:"true" split_words:"true"`
-	DbName                     string        `default:"loms" split_words:"true" split_words:"true"`
+	DbUser                     string        `default:"postgres" split_words:"true"`
+	DbPassword                 string        `default:"password" split_words:"true"`
+	DbHost                     string        `default:"db:5432" split_words:"true"`
+	DbName                     string        `default:"loms" split_words:"true"`
 }
 
 func BuildConfig() *Config {

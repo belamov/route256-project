@@ -3,18 +3,25 @@ package server
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net"
+	"net/http"
+	"sync"
 	"testing"
+	"time"
 
-	"route256/loms/internal/app/grpc/pb"
-	"route256/loms/internal/app/services"
-
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
+
+	"route256/loms/internal/app/grpc/pb"
+	"route256/loms/internal/app/services"
 )
 
 type Reporter struct {
@@ -94,4 +101,79 @@ func (s *LomsGrpcServerTestSuite) TearDownSuite() {
 
 func TestLomsGrpcServerTestSuite(t *testing.T) {
 	suite.Run(t, new(LomsGrpcServerTestSuite))
+}
+
+func (s *LomsGrpcServerTestSuite) TestRunServer() {
+	ctx, cancel := context.WithCancel(context.Background())
+	wg := &sync.WaitGroup{}
+	address := fmt.Sprintf("0.0.0.0:%d", chooseRandomUnusedPort())
+	gatewayPort := chooseRandomUnusedPort()
+	gatewayAddress := fmt.Sprintf("0.0.0.0:%d", gatewayPort)
+	server := NewGRPCServer(address, gatewayAddress, s.mockService)
+
+	wg.Add(2)
+	go server.Run(ctx, wg)
+	go server.RunGateway(ctx, wg)
+
+	conn, err := grpc.DialContext(
+		ctx,
+		address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	require.NoError(s.T(), err)
+	grpcClient := pb.NewLomsClient(conn)
+
+	waitForGrpcServerStart(grpcClient)
+
+	s.mockService.EXPECT().StockInfo(gomock.Any(), gomock.Any()).Return(uint64(2), nil)
+	count, err := grpcClient.StockInfo(context.Background(), &pb.StockInfoRequest{Sku: 20})
+	assert.NoError(s.T(), err)
+	assert.Equal(s.T(), uint64(2), count.Count)
+
+	waitForHTTPServerStart(gatewayPort)
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/", gatewayPort))
+	_ = resp.Body.Close()
+	require.NoError(s.T(), err)
+	assert.Equal(s.T(), http.StatusNotFound, resp.StatusCode)
+
+	cancel()
+	wg.Wait()
+}
+
+func chooseRandomUnusedPort() (port int) {
+	for i := 0; i < 10; i++ {
+		port = 40000 + int(rand.Int31n(10000))
+		if ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
+			_ = ln.Close()
+			break
+		}
+	}
+	return port
+}
+
+func waitForGrpcServerStart(client pb.LomsClient) {
+	for i := 0; i < 1000; i++ {
+		_, err := client.StockInfo(context.Background(), &pb.StockInfoRequest{Sku: 20})
+		if err == nil {
+			return
+		}
+		grpcErr, _ := status.FromError(err)
+		if grpcErr.Code() != codes.Unavailable {
+			return
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
+}
+
+func waitForHTTPServerStart(port int) {
+	// wait for up to 10 seconds for server to start before returning it
+	client := http.Client{Timeout: time.Second}
+	defer client.CloseIdleConnections()
+	for i := 0; i < 100; i++ {
+		if resp, err := client.Get(fmt.Sprintf("http://localhost:%d/ping", port)); err == nil {
+			_ = resp.Body.Close()
+			return
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
 }
