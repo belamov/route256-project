@@ -7,9 +7,27 @@ services:
     build:
       context:  ../
       dockerfile: docker/Dockerfile
-    command: /loms
     volumes:
       - ../:/usr/src/app/
     ports:
       - "8083:8083"
       - "8080:8080"
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "user=postgres password=password host=db dbname=loms sslmode=disable"
+    command: sh -c '/usr/src/app/docker/wait-for-it.sh -t 5 db:5432 -- /loms'
+    depends_on:
+      - db
+  db:
+    image: postgres
+    container_name: loms-db
+    environment:
+      POSTGRES_DB: loms
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pglomsdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+volumes:
+  pglomsdata:

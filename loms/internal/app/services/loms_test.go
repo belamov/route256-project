@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"route256/loms/internal/app/storage"
+
 	"route256/loms/internal/app/models"
 
 	"github.com/stretchr/testify/assert"
@@ -44,7 +46,7 @@ func (ts *LomsTestSuite) SetupSuite() {
 	ts.mockCtrl = gomock.NewController(Reporter{ts.T()})
 	ts.mockStocksProvider = NewMockStocksProvider(ts.mockCtrl)
 	ts.mockOrdersProvider = NewMockOrdersProvider(ts.mockCtrl)
-	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider, DefaultAllowedOrderUnpaidTime)
+	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider, DefaultAllowedOrderUnpaidTime, MockTransactor{})
 }
 
 func TestLomsTestSuite(t *testing.T) {
@@ -113,12 +115,12 @@ func (ts *LomsTestSuite) TestCreateOrderInsufficientStocks() {
 	}
 
 	ts.mockOrdersProvider.EXPECT().Create(ctx, userId, gomock.Any(), orderItems).Return(newOrder, nil)
-	ts.mockStocksProvider.EXPECT().Reserve(ctx, gomock.Any()).Return(ErrInsufficientStocks)
+	ts.mockStocksProvider.EXPECT().Reserve(ctx, gomock.Any()).Return(storage.ErrInsufficientStocks)
 	ts.mockOrdersProvider.EXPECT().SetStatus(ctx, gomock.Any(), gomock.Any()).Return(failedOrder, nil)
 
 	order, err := ts.loms.OrderCreate(ctx, userId, orderItems)
 	assert.ErrorIs(ts.T(), err, ErrInsufficientStocks)
-	assert.Equal(ts.T(), models.Order{}, order)
+	assert.Equal(ts.T(), newOrder, order)
 }
 
 func (ts *LomsTestSuite) TestGetOrderById() {
@@ -151,7 +153,7 @@ func (ts *LomsTestSuite) TestGetOrderByIdNotFound() {
 	ctx := context.Background()
 	var orderId int64 = 1
 
-	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(ctx, orderId).Return(models.Order{}, ErrOrderNotFound)
+	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(ctx, orderId).Return(models.Order{}, storage.ErrOrderNotFound)
 
 	order, err := ts.loms.OrderInfo(ctx, orderId)
 	assert.ErrorIs(ts.T(), err, ErrOrderNotFound)
@@ -179,4 +181,56 @@ func (ts *LomsTestSuite) TestRunCancelUnpaidOrders() {
 	time.Sleep(time.Millisecond * 5)
 	cancel()
 	wg.Wait()
+}
+
+func (ts *LomsTestSuite) TestStockInfo() {
+	ctx := context.Background()
+	var sku uint32 = 1
+
+	count := uint64(1)
+
+	ts.mockStocksProvider.EXPECT().GetBySku(ctx, sku).Return(count, nil)
+
+	count, err := ts.loms.StockInfo(ctx, sku)
+	assert.NoError(ts.T(), err)
+	assert.Equal(ts.T(), count, count)
+}
+
+func (ts *LomsTestSuite) TestOrderPay() {
+	ctx := context.Background()
+	orderItems := []models.OrderItem{
+		{
+			Sku:   1,
+			Count: 1,
+		},
+		{
+			Sku:   2,
+			Count: 2,
+		},
+	}
+
+	order := models.Order{
+		Id:        1,
+		Items:     orderItems,
+		Status:    models.OrderStatusAwaitingPayment,
+		CreatedAt: time.Now(),
+	}
+
+	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(ctx, order.Id).Return(order, nil)
+	ts.mockStocksProvider.EXPECT().ReserveRemove(ctx, order).Return(nil)
+	ts.mockOrdersProvider.EXPECT().SetStatus(ctx, order, gomock.Any()).Return(order, nil)
+
+	err := ts.loms.OrderPay(ctx, order.Id)
+	assert.NoError(ts.T(), err)
+
+	// test not found order
+	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(ctx, order.Id).Return(order, storage.ErrOrderNotFound)
+	err = ts.loms.OrderPay(ctx, order.Id)
+	assert.ErrorIs(ts.T(), err, ErrOrderNotFound)
+
+	// test expired order
+	order.CreatedAt = time.Now().Add(-time.Hour * 200)
+	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(ctx, order.Id).Return(order, nil)
+	err = ts.loms.OrderPay(ctx, order.Id)
+	assert.ErrorIs(ts.T(), err, ErrOrderCancelled)
 }

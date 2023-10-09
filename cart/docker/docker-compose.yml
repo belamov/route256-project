@@ -7,9 +7,28 @@ services:
     build:
       context:  ../
       dockerfile: docker/Dockerfile
-    command: /cart
     volumes:
       - ../:/usr/src/app/
     ports:
       - "8083:8083"
       - "8080:8080"
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "user=postgres password=password host=db dbname=cart sslmode=disable"
+    command: sh -c '/usr/src/app/docker/wait-for-it.sh -t 5 db:5432 -- /cart'
+    depends_on:
+      - db
+  db:
+    image: postgres
+    container_name: cart-db
+    environment:
+      POSTGRES_DB: cart
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgcartdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+volumes:
+  pgcartdata:
+

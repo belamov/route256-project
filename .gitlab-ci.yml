@@ -7,15 +7,26 @@ workflow:
 
 stages:
   - check
-  - build
-
 
 test cart:
+  services:
+    - postgres:latest
+  variables:
+    POSTGRES_DB: cart
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: password
+    CART_DB_NAME: cart
+    CART_DB_USER: postgres
+    CART_DB_PASSWORD: password
+    CART_DB_HOST: postgres
+    GOOSE_DRIVER: postgres
+    GOOSE_DBSTRING: "user=postgres password=password host=postgres dbname=cart sslmode=disable"
   stage: check
   script:
+    - go install github.com/pressly/goose/v3/cmd/goose@latest
     - cd cart
-    - go vet ./...
-    - go test -v -coverprofile=coverage.txt -covermode count ./...
+    - goose -dir internal/app/storage/migrations up
+    - go test -v -coverprofile=coverage.txt ./...
     - go get github.com/boumenot/gocover-cobertura
     - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
     - cp coverage.xml ../coverageCart.xml
@@ -41,11 +52,24 @@ fmt cart:
     - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
 
 test loms:
+  services:
+    - postgres:latest
+  variables:
+    POSTGRES_DB: loms
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: password
+    LOMS_DB_NAME: loms
+    LOMS_DB_USER: postgres
+    LOMS_DB_PASSWORD: password
+    LOMS_DB_HOST: postgres
+    GOOSE_DRIVER: postgres
+    GOOSE_DBSTRING: "user=postgres password=password host=postgres dbname=loms sslmode=disable"
   stage: check
   script:
+    - go install github.com/pressly/goose/v3/cmd/goose@latest
     - cd loms
-    - go vet ./...
-    - go test -v -coverprofile=coverage.txt -covermode count ./...
+    - goose -dir internal/app/storage/migrations up
+    - go test -v -coverprofile=coverage.txt ./...
     - go get github.com/boumenot/gocover-cobertura
     - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
     - cp coverage.xml ../coverageLoms.xml
@@ -69,14 +93,3 @@ fmt loms:
     - go install mvdan.cc/gofumpt@latest
     - cd loms
     - test -z "$(gofumpt -d -e . | tee /dev/stderr)"
-
-build cart:
-  stage: build
-  script:
-    - go build ./cart/cmd/app
-
-
-build loms:
-  stage: build
-  script:
-    - go build ./loms/cmd/app

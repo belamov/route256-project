@@ -5,6 +5,9 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
+
+	"route256/cart/internal/app/storage/repositories"
 
 	"route256/cart/internal/app/http/handlers"
 
@@ -24,24 +27,32 @@ func main() {
 
 	config := app.BuildConfig()
 
-	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	wg := &sync.WaitGroup{}
 
+	wg.Add(1)
 	lomsService, err := loms.NewLomsGrpcClient(ctx, wg, config.LomsGrpcServiceUrl)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed init grpc loms client")
 		return
 	}
-	wg.Add(1)
 
+	wg.Add(1)
 	productService, err := product.NewProductGrpcClient(ctx, wg, config.ProductGrpcServiceUrl)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed init grpc product client")
 		return
 	}
-	wg.Add(1)
 
-	cartProvider := services.NewMockCartProvider(nil)
+	wg.Add(1)
+	dbPool, err := repositories.InitPostgresDbConnection(ctx, wg, config)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot initialize connection to postgres")
+		return
+	}
+
+	cartProvider := repositories.NewCartRepository(dbPool)
+
 	cartService := services.NewCartService(productService, lomsService, cartProvider)
 
 	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, handlers.NewRouter(cartService))

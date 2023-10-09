@@ -9,11 +9,15 @@ import (
 )
 
 type Config struct {
-	HttpServerAddress          string        `default:"0.0.0.0:8080"`
-	GrpcServerAddress          string        `default:"0.0.0.0:8083"`
-	GrpcGatewayServerAddress   string        `default:"0.0.0.0:8084"`
-	AllowedOrderUnpaidTime     time.Duration `default:"10m"`
-	CancelUnpaidOrdersInterval time.Duration `default:"1m"`
+	HttpServerAddress          string        `default:"0.0.0.0:8080" split_words:"true"`
+	GrpcServerAddress          string        `default:"0.0.0.0:8083" split_words:"true"`
+	GrpcGatewayServerAddress   string        `default:"0.0.0.0:8084" split_words:"true"`
+	AllowedOrderUnpaidTime     time.Duration `default:"10m" split_words:"true"`
+	CancelUnpaidOrdersInterval time.Duration `default:"1m" split_words:"true"`
+	DbUser                     string        `default:"postgres" split_words:"true"`
+	DbPassword                 string        `default:"password" split_words:"true"`
+	DbHost                     string        `default:"db:5432" split_words:"true"`
+	DbName                     string        `default:"loms" split_words:"true"`
 }
 
 func BuildConfig() *Config {
@@ -35,11 +39,19 @@ func (config Config) String() string {
 			"GrpcServerAddress: %v\n"+
 			"GrpcGatewayServerAddress: %v\n"+
 			"AllowedOrderUnpaidTime: %v\n"+
-			"CancelUnpaidOrdersInterval: %v\n",
+			"CancelUnpaidOrdersInterval: %v\n"+
+			"DbHost: %v\n"+
+			"DbName: %v\n"+
+			"DbUser: %v\n"+
+			"DbPassword: %v\n",
 		config.HttpServerAddress,
 		config.GrpcServerAddress,
 		config.GrpcGatewayServerAddress,
 		config.AllowedOrderUnpaidTime,
 		config.CancelUnpaidOrdersInterval,
+		config.DbHost,
+		config.DbName,
+		config.DbUser,
+		config.DbPassword,
 	)
 }
