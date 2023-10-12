@@ -1,0 +1,56 @@
+goos: linux
+goarch: amd64
+pkg: route256/cart/internal/app/services
+cpu: Intel(R) Core(TM) i7-7700 CPU @ 3.60GHz
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_1_items-8         	     100	  10203033 ns/op	     169 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_1_items-8         	     100	  10200239 ns/op	     169 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_1_items-8         	     100	  10256390 ns/op	     169 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_1_items-8         	     100	  10199604 ns/op	     168 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_1_items-8         	     100	  10204627 ns/op	     168 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_1_items-8         	     100	  10206254 ns/op	     334 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_1_items-8         	     100	  10201885 ns/op	     168 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_1_items-8         	     100	  10201036 ns/op	     168 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_1_items-8         	     100	  10210013 ns/op	     168 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_1_items-8         	     100	  10207458 ns/op	     168 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_2_items-8         	      58	  20373772 ns/op	     201 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_2_items-8         	      58	  20390643 ns/op	     201 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_2_items-8         	      58	  20371482 ns/op	     201 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_2_items-8         	      58	  20388491 ns/op	     201 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_2_items-8         	      58	  20369520 ns/op	     201 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_2_items-8         	      58	  20375766 ns/op	     201 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_2_items-8         	      57	  20400142 ns/op	     201 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_2_items-8         	      57	  20406803 ns/op	     201 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_2_items-8         	      57	  20461517 ns/op	     201 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_2_items-8         	      58	  20446018 ns/op	     201 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_5_items-8         	      22	  51073804 ns/op	     332 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_5_items-8         	      22	  51047464 ns/op	     332 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_5_items-8         	      22	  50963697 ns/op	     332 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_5_items-8         	      22	  50999492 ns/op	     332 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_5_items-8         	      22	  51003617 ns/op	     332 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_5_items-8         	      22	  51008186 ns/op	     332 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_5_items-8         	      22	  51005412 ns/op	     331 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_5_items-8         	      22	  51032450 ns/op	     332 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_5_items-8         	      22	  51016385 ns/op	     332 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_5_items-8         	      22	  50956166 ns/op	     332 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_10_items-8        	      10	 101845374 ns/op	     544 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_10_items-8        	      10	 101983765 ns/op	     544 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_10_items-8        	      10	 101970936 ns/op	     544 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_10_items-8        	      10	 101812010 ns/op	     544 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_10_items-8        	      10	 101983141 ns/op	     544 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_10_items-8        	      10	 102094469 ns/op	     601 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_10_items-8        	      10	 102017788 ns/op	     545 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_10_items-8        	      10	 101999807 ns/op	     544 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_10_items-8        	      10	 102028405 ns/op	     544 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_10_items-8        	      10	 101977520 ns/op	     544 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_20_items-8        	       5	 204112427 ns/op	    1017 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_20_items-8        	       5	 203959807 ns/op	    1017 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_20_items-8        	       5	 203725290 ns/op	    1017 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_20_items-8        	       5	 203829494 ns/op	    1017 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_20_items-8        	       5	 204206355 ns/op	    1017 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_20_items-8        	       5	 204820069 ns/op	    1017 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_20_items-8        	       5	 203561142 ns/op	    1017 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_20_items-8        	       5	 203931663 ns/op	    1017 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_20_items-8        	       5	 203582480 ns/op	    1017 B/op	       5 allocs/op
+BenchmarkCart_GetItemsByUserId/Get_Cart_List_With_20_items-8        	       5	 203973820 ns/op	    1017 B/op	       5 allocs/op
+PASS
+ok  	route256/cart/internal/app/services	65.702s

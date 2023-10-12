@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"route256/cart/internal/app/models"
 
@@ -113,25 +114,78 @@ func (c *cart) GetItemsByUserId(ctx context.Context, userId int64) ([]models.Car
 		return nil, 0, fmt.Errorf("error fetching users cart: %w", err)
 	}
 
-	cartItemsWithInfo := make([]models.CartItemWithInfo, 0, len(items))
 	var totalPrice uint32 = 0
-	for _, item := range items {
-		itemInfo, err := c.productService.GetProduct(ctx, item.Sku)
-		if err != nil {
-			return nil, 0, fmt.Errorf("error fetching product info: %w", err)
-		}
-		cartItemWithInfo := models.CartItemWithInfo{
-			User:  userId,
-			Sku:   item.Sku,
-			Count: item.Count,
-			Name:  itemInfo.Name,
-			Price: itemInfo.Price,
-		}
-		cartItemsWithInfo = append(cartItemsWithInfo, cartItemWithInfo)
-		totalPrice += cartItemWithInfo.Price
+
+	itemsWithInfo, err := c.getProductsFullInfo(ctx, items)
+	if err != nil {
+		return nil, 0, err
 	}
 
-	return cartItemsWithInfo, totalPrice, nil
+	for _, itemWithInfo := range itemsWithInfo {
+		totalPrice += itemWithInfo.Price * uint32(itemWithInfo.Count)
+	}
+
+	return itemsWithInfo, totalPrice, nil
+}
+
+func (c *cart) getProductsFullInfo(ctx context.Context, items []models.CartItem) ([]models.CartItemWithInfo, error) {
+	cartItemsWithInfo := make([]models.CartItemWithInfo, len(items))
+
+	// своя реализация golang.org/x/sync/errgroup без ограничения по горутинам
+	// cancel необходима для отмены запросов при первой ошибке
+	ctx, cancel := context.WithCancel(ctx)
+	// wg нужна для того, чтобы дождаться выполнения всех запросов
+	wg := &sync.WaitGroup{}
+	// нужно для того, чтобы сохранить самую первую ошибку и не перезаписать ее
+	errOnce := &sync.Once{}
+	// будет хранить ошибку, которая произошла первой при получении инфы о продукте
+	var errFetchProduct error
+
+	for i, item := range items {
+		// шадоуим переменные, чтобы в горутинах оказались правильные значения
+		i, item := i, item
+		wg.Add(1)
+		// в отдельной горутине делаем запрос в сервис продуктов
+		go func() {
+			defer wg.Done()
+			select {
+			// если в какой-либо другой горутине будет ошибка - контекст отменится, нам уже не нужно будет делать запрос
+			case <-ctx.Done():
+				return
+			default:
+				itemInfo, err := c.productService.GetProduct(ctx, item.Sku)
+				if err != nil {
+					log.Err(err).Msg("error fetching product from product service")
+					// если произошла ошибка, записываем ее и отменяем контекст, чтобы прекратить выполнение остальных запросов
+					// выполняется единожды, чтобы не перезаписать первую ошибку
+					errOnce.Do(func() {
+						errFetchProduct = err
+						cancel()
+					})
+					return
+				}
+				// ошибки нет, добавляем итем в результат
+				cartItemsWithInfo[i] = models.CartItemWithInfo{
+					Sku:   item.Sku,
+					Count: item.Count,
+					Name:  itemInfo.Name,
+					Price: itemInfo.Price,
+				}
+			}
+		}()
+	}
+
+	// ждем, пока все горутины завершатся
+	wg.Wait()
+	// отменяем контекст, чтобы он не протек
+	cancel()
+
+	// если мы сохранили ошибку из горутин, возвращаем ее
+	if errFetchProduct != nil {
+		return nil, errFetchProduct
+	}
+
+	return cartItemsWithInfo, nil
 }
 
 func (c *cart) Checkout(ctx context.Context, userId int64) (int64, error) {
