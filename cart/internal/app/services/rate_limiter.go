@@ -7,16 +7,16 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type SinglePodLimiter struct {
+type RateLimiter struct {
 	limiter *rate.Limiter
 }
 
-func NewSinglePodLimiter(targetRps int) *SinglePodLimiter {
-	return &SinglePodLimiter{
+func NewRateLimiter(targetRps int) *RateLimiter {
+	return &RateLimiter{
 		limiter: rate.NewLimiter(rate.Every(time.Second/time.Duration(targetRps)), 1),
 	}
 }
 
-func (s *SinglePodLimiter) Wait(ctx context.Context) error {
+func (s *RateLimiter) Wait(ctx context.Context) error {
 	return s.limiter.Wait(ctx)
 }

@@ -37,7 +37,9 @@ func main() {
 		return
 	}
 
-	limiter := services.NewSinglePodLimiter(config.TargetRpsToProductService)
+	wg.Add(1)
+	limiter := services.NewRedisRateLimiter(ctx, wg, config.RedisAddress, config.TargetRpsToProductService)
+
 	wg.Add(1)
 	productService, err := product.NewProductGrpcClient(ctx, wg, config.ProductGrpcServiceUrl, limiter)
 	if err != nil {

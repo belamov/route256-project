@@ -20,6 +20,7 @@ type Config struct {
 	DbPassword                string `default:"password" split_words:"true"`
 	DbHost                    string `default:"db:5432" split_words:"true"`
 	DbName                    string `default:"cart" split_words:"true"`
+	RedisAddress              string `default:"redis:6379" split_words:"true"`
 }
 
 func BuildConfig() *Config {
@@ -48,7 +49,8 @@ func (config Config) String() string {
 			"DbHost: %v\n"+
 			"DbName: %v\n"+
 			"DbUser: %v\n"+
-			"DbPassword: %v\n",
+			"DbPassword: %v\n"+
+			"RedisAddress: %v\n",
 		config.HttpServerAddress,
 		config.ProductHttpServiceUrl,
 		config.TargetRpsToProductService,
@@ -61,5 +63,6 @@ func (config Config) String() string {
 		config.DbName,
 		config.DbUser,
 		config.DbPassword,
+		config.RedisAddress,
 	)
 }
