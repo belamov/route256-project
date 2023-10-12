@@ -37,8 +37,9 @@ func main() {
 		return
 	}
 
+	limiter := services.NewSinglePodLimiter(config.TargetRpsToProductService)
 	wg.Add(1)
-	productService, err := product.NewProductGrpcClient(ctx, wg, config.ProductGrpcServiceUrl)
+	productService, err := product.NewProductGrpcClient(ctx, wg, config.ProductGrpcServiceUrl, limiter)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed init grpc product client")
 		return

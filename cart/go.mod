@@ -12,6 +12,7 @@ require (
 	github.com/rs/zerolog v1.30.0
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/mock v0.3.0
+	golang.org/x/time v0.3.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d
 	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
