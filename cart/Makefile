@@ -11,7 +11,7 @@ build:
 	$(docker_compose_bin) -f $(docker_compose_yml) build
 
 up: build
-	$(docker_compose_bin) -f $(docker_compose_yml) up -d
+	$(docker_compose_bin) -f $(docker_compose_yml) up
 
 down:
 	$(docker_compose_bin) -f $(docker_compose_yml) down -v

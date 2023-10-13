@@ -7,16 +7,15 @@ import (
 	"sync"
 	"syscall"
 
-	"route256/cart/internal/app/storage/repositories"
-
-	"route256/cart/internal/app/http/handlers"
-
 	"route256/cart/internal/app"
 	"route256/cart/internal/app/grpc/clients/loms"
 	"route256/cart/internal/app/grpc/clients/product"
 	grpcserver "route256/cart/internal/app/grpc/server"
+	"route256/cart/internal/app/http/handlers"
 	httpserver "route256/cart/internal/app/http/server"
 	"route256/cart/internal/app/services"
+	"route256/cart/internal/app/storage/repositories"
+	"route256/cart/internal/pkg/limiter"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -38,7 +37,10 @@ func main() {
 	}
 
 	wg.Add(1)
-	productService, err := product.NewProductGrpcClient(ctx, wg, config.ProductGrpcServiceUrl)
+	redisRateLimiter := limiter.NewRedisRateLimiter(ctx, wg, config.RedisAddress, config.TargetRpsToProductService)
+
+	wg.Add(1)
+	productService, err := product.NewProductGrpcClient(ctx, wg, config.ProductGrpcServiceUrl, redisRateLimiter)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed init grpc product client")
 		return

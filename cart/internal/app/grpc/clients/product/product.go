@@ -6,13 +6,13 @@ import (
 	"sync"
 
 	"route256/cart/internal/app/grpc/clients/product/pb"
+	"route256/cart/internal/app/grpc/interceptors"
+	"route256/cart/internal/app/models"
+	"route256/cart/internal/app/services"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	"route256/cart/internal/app/models"
-	"route256/cart/internal/app/services"
 )
 
 type productGrpcClient struct {
@@ -20,11 +20,17 @@ type productGrpcClient struct {
 	conn       *grpc.ClientConn
 }
 
-func NewProductGrpcClient(ctx context.Context, wg *sync.WaitGroup, serviceUrl string) (services.ProductService, error) {
+func NewProductGrpcClient(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	serviceUrl string,
+	limiter interceptors.Limiter,
+) (services.ProductService, error) {
 	conn, err := grpc.DialContext(
 		ctx,
 		serviceUrl,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(interceptors.RateLimitClientInterceptor(limiter)),
 	)
 	if err != nil {
 		return nil, err
