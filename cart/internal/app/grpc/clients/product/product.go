@@ -3,17 +3,16 @@ package product
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 
 	"route256/cart/internal/app/grpc/clients/product/pb"
+	"route256/cart/internal/app/grpc/interceptors"
+	"route256/cart/internal/app/models"
+	"route256/cart/internal/app/services"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	"route256/cart/internal/app/models"
-	"route256/cart/internal/app/services"
 )
 
 type productGrpcClient struct {
@@ -21,26 +20,17 @@ type productGrpcClient struct {
 	conn       *grpc.ClientConn
 }
 
-type Limiter interface {
-	Wait(ctx context.Context) error
-}
-
-func UnaryClientInterceptor(limiter Limiter) grpc.UnaryClientInterceptor {
-	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		err := limiter.Wait(ctx)
-		if err != nil {
-			return fmt.Errorf("cant wait for limiter to allow request: %w", err)
-		}
-		return invoker(ctx, method, req, reply, cc, opts...)
-	}
-}
-
-func NewProductGrpcClient(ctx context.Context, wg *sync.WaitGroup, serviceUrl string, limiter Limiter) (services.ProductService, error) {
+func NewProductGrpcClient(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	serviceUrl string,
+	limiter interceptors.Limiter,
+) (services.ProductService, error) {
 	conn, err := grpc.DialContext(
 		ctx,
 		serviceUrl,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(UnaryClientInterceptor(limiter)),
+		grpc.WithUnaryInterceptor(interceptors.RateLimitClientInterceptor(limiter)),
 	)
 	if err != nil {
 		return nil, err

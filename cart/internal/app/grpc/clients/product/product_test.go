@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"route256/cart/internal/app/services"
+	"route256/cart/internal/pkg/limiter"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,22 +19,30 @@ func TestGetProductWithRateLimiter(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), "products_token", "testtoken"))
 
 	wg := &sync.WaitGroup{}
+
+	targetRps := 2
+	goroutinesCount := 10
+	var existingSku uint32 = 1148162
+	var expectedPrice uint32 = 2931
+	realProductUrl := "route256.pavl.uk:8082"
+
+	rateLimiter := limiter.NewRateLimiter(targetRps)
+
 	wg.Add(1)
-	limiter := services.NewRateLimiter(2)
-	client, err := NewProductGrpcClient(ctx, wg, "route256.pavl.uk:8082", limiter)
+	client, err := NewProductGrpcClient(ctx, wg, realProductUrl, rateLimiter)
 	require.NoError(t, err)
 
 	wgRequests := &sync.WaitGroup{}
-	wgRequests.Add(10)
+	wgRequests.Add(goroutinesCount)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < goroutinesCount; i++ {
 		go func() {
 			defer wgRequests.Done()
-			info, err := client.GetProduct(ctx, 1148162)
+			info, err := client.GetProduct(ctx, existingSku)
 			fmt.Println(time.Now(), info, err)
 			assert.NoError(t, err)
 			assert.Equal(t, "Кулинар Гуров", info.Name)
-			assert.Equal(t, uint32(2931), info.Price)
+			assert.Equal(t, expectedPrice, info.Price)
 		}()
 	}
 
@@ -49,22 +57,30 @@ func TestGetProductRedisRateLimiter(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), "products_token", "testtoken"))
 
 	wg := &sync.WaitGroup{}
+
+	targetRps := 2
+	goroutinesCount := 10
+	var existingSku uint32 = 1148162
+	var expectedPrice uint32 = 2931
+	realProductUrl := "route256.pavl.uk:8082"
+
+	redisRateLimiter := limiter.NewRedisRateLimiter(ctx, wg, "redis:6379", targetRps)
+
 	wg.Add(1)
-
-	limiter := services.NewRedisRateLimiter(ctx, wg, "redis:6379", 2)
-	client, err := NewProductGrpcClient(ctx, wg, "route256.pavl.uk:8082", limiter)
+	client, err := NewProductGrpcClient(ctx, wg, realProductUrl, redisRateLimiter)
 	require.NoError(t, err)
-	wgRequests := &sync.WaitGroup{}
-	wgRequests.Add(10)
 
-	for i := 0; i < 10; i++ {
+	wgRequests := &sync.WaitGroup{}
+	wgRequests.Add(goroutinesCount)
+
+	for i := 0; i < goroutinesCount; i++ {
 		go func() {
 			defer wgRequests.Done()
-			info, err := client.GetProduct(ctx, 1148162)
+			info, err := client.GetProduct(ctx, existingSku)
 			fmt.Println(time.Now(), info, err)
 			assert.NoError(t, err)
 			assert.Equal(t, "Кулинар Гуров", info.Name)
-			assert.Equal(t, uint32(2931), info.Price)
+			assert.Equal(t, expectedPrice, info.Price)
 		}()
 	}
 
