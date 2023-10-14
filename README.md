@@ -1,3 +1,6 @@
+![coverage](https://gitlab.ozon.dev/belamov44/workshop1/badges/main/coverage.svg)
+![pipeline](https://gitlab.ozon.dev/belamov44/workshop1/badges/main/pipeline.svg)
+
 # Домашнее задание 1
 
 - Создать скелеты сервисов cart и loms, согласно [документации](docs/README.md).
