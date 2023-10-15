@@ -68,6 +68,17 @@ func (m *AddItemRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if m.GetItem() == nil {
+		err := AddItemRequestValidationError{
+			field:  "Item",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if all {
 		switch v := interface{}(m.GetItem()).(type) {
 		case interface{ ValidateAll() error }:
