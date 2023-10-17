@@ -43,7 +43,7 @@ service Cart {
 
 message AddItemRequest {
   int64 user = 1 [(validate.rules).int64.gt = 0];
-  CartItemAddRequest item = 2;
+  CartItemAddRequest item = 2 [(validate.rules).message.required = true];
 }
 
 message CartItemAddRequest {

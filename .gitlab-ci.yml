@@ -11,6 +11,7 @@ stages:
 test cart:
   services:
     - postgres:latest
+    - redis:latest
   variables:
     POSTGRES_DB: cart
     POSTGRES_USER: postgres
@@ -21,6 +22,8 @@ test cart:
     CART_DB_HOST: postgres
     GOOSE_DRIVER: postgres
     GOOSE_DBSTRING: "user=postgres password=password host=postgres dbname=cart sslmode=disable"
+    CART_REDIS_ADDRESS: "redis:6379"
+    REDIS_PORT: "6379"
   stage: check
   script:
     - go install github.com/pressly/goose/v3/cmd/goose@latest
