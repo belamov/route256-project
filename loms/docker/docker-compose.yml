@@ -14,8 +14,9 @@ services:
       - "8080:8080"
     environment:
       GOOSE_DRIVER: postgres
-      GOOSE_DBSTRING: "user=postgres password=password host=db dbname=loms sslmode=disable"
-    command: sh -c '/usr/src/app/docker/wait-for-it.sh -t 5 db:5432 -- /loms'
+      GOOSE_DBSTRING: "user=postgres password=password host=localhost dbname=loms sslmode=disable"
+    command: sh -c '/usr/src/app/docker/wait-for-it.sh -t 5 localhost:5432 -- /loms'
+    network_mode: "host"
     depends_on:
       - db
   db:

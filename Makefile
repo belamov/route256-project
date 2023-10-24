@@ -12,3 +12,6 @@ check:
 	cd cart && make check
 	cd loms && make check
 	#cd notifications && make check
+
+up-kafka:
+	$(docker_compose_bin) -f docker-compose-kafka.yml up

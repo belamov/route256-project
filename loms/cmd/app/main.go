@@ -6,6 +6,11 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
+
+	"github.com/IBM/sarama"
+
+	"route256/loms/internal/app/events/kafka"
 
 	"route256/loms/internal/app"
 	grpcserver "route256/loms/internal/app/grpc/server"
@@ -36,7 +41,31 @@ func main() {
 	orderPgRepository := repositories.NewOrderPgRepository(dbPool)
 	pgTransactor := repositories.NewPgTransactor(dbPool)
 
-	lomsService := services.NewLomsService(orderPgRepository, stockPgRepository, config.AllowedOrderUnpaidTime, pgTransactor)
+	wg.Add(1)
+	eventProducer, err := kafka.NewKafkaEventProducer(
+		ctx,
+		wg,
+		config.KafkaBrokers,
+		kafka.WithRequiredAcks(sarama.NoResponse),
+		kafka.WithProducerPartitioner(sarama.NewHashPartitioner),
+		kafka.WithMaxOpenRequests(1),
+		kafka.WithMaxRetries(5),
+		kafka.WithRetryBackoff(10*time.Millisecond),
+		kafka.WithProducerFlushMessages(3),
+		kafka.WithProducerFlushFrequency(5*time.Second),
+	)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot initialize kafka event producer")
+		return
+	}
+
+	lomsService := services.NewLomsService(
+		orderPgRepository,
+		stockPgRepository,
+		config.AllowedOrderUnpaidTime,
+		pgTransactor,
+		eventProducer,
+	)
 
 	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, lomsService)
 	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, config.GrpcGatewayServerAddress, lomsService)

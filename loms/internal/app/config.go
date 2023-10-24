@@ -16,8 +16,9 @@ type Config struct {
 	CancelUnpaidOrdersInterval time.Duration `default:"1m" split_words:"true"`
 	DbUser                     string        `default:"postgres" split_words:"true"`
 	DbPassword                 string        `default:"password" split_words:"true"`
-	DbHost                     string        `default:"db:5432" split_words:"true"`
+	DbHost                     string        `default:"localhost:5432" split_words:"true"`
 	DbName                     string        `default:"loms" split_words:"true"`
+	KafkaBrokers               []string      `default:"localhost:9091,localhost:9092,localhost:9093" split_words:"true"`
 }
 
 func BuildConfig() *Config {
@@ -43,7 +44,8 @@ func (config Config) String() string {
 			"DbHost: %v\n"+
 			"DbName: %v\n"+
 			"DbUser: %v\n"+
-			"DbPassword: %v\n",
+			"DbPassword: %v\n"+
+			"KafkaBrokers: %v\n",
 		config.HttpServerAddress,
 		config.GrpcServerAddress,
 		config.GrpcGatewayServerAddress,
@@ -53,5 +55,6 @@ func (config Config) String() string {
 		config.DbName,
 		config.DbUser,
 		config.DbPassword,
+		config.KafkaBrokers,
 	)
 }

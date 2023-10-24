@@ -21,6 +21,7 @@ type LomsTestSuite struct {
 	mockCtrl           *gomock.Controller
 	mockOrdersProvider *MockOrdersProvider
 	mockStocksProvider *MockStocksProvider
+	mockEventProducer  *MockEventProducer
 	loms               Loms
 }
 
@@ -46,7 +47,8 @@ func (ts *LomsTestSuite) SetupSuite() {
 	ts.mockCtrl = gomock.NewController(Reporter{ts.T()})
 	ts.mockStocksProvider = NewMockStocksProvider(ts.mockCtrl)
 	ts.mockOrdersProvider = NewMockOrdersProvider(ts.mockCtrl)
-	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider, DefaultAllowedOrderUnpaidTime, MockTransactor{})
+	ts.mockEventProducer = NewMockEventProducer(ts.mockCtrl)
+	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider, DefaultAllowedOrderUnpaidTime, MockTransactor{}, ts.mockEventProducer)
 }
 
 func TestLomsTestSuite(t *testing.T) {
@@ -167,7 +169,7 @@ func (ts *LomsTestSuite) TestRunCancelUnpaidOrders() {
 	orderToCancel := models.Order{Id: orderId, Status: models.OrderStatusAwaitingPayment}
 
 	ts.mockOrdersProvider.EXPECT().
-		GetOrdersIdsByCreatedAtAndStatus(gomock.Any(), gomock.Any(), gomock.Any()).
+		GetExpiredOrdersWithStatus(gomock.Any(), gomock.Any(), gomock.Any()).
 		AnyTimes().
 		Return([]int64{orderId}, nil)
 	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(gomock.Any(), orderId).AnyTimes().Return(orderToCancel, nil)

@@ -13,6 +13,9 @@ build:
 up: build
 	$(docker_compose_bin) -f $(docker_compose_yml) up -d
 
+up-f: build
+	$(docker_compose_bin) -f $(docker_compose_yml) up
+
 down:
 	$(docker_compose_bin) -f $(docker_compose_yml) down -v
 
@@ -36,10 +39,10 @@ migrate: up
 	$(docker_compose_bin) -f $(docker_compose_yml) stop
 
 mock:
-	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/cart_mock.go -package=services route256/cart/internal/app/services Cart
-	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/cart_provider_mock.go -package=services route256/cart/internal/app/services CartProvider
-	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/product_mock.go -package=services route256/cart/internal/app/services ProductService
-	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/loms_mock.go -package=services route256/cart/internal/app/services LomsService
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/loms_mock.go -package=services route256/loms/internal/app/services Loms
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/orders_provider_mock.go -package=services route256/loms/internal/app/services OrdersProvider
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/stock_provider_mock.go -package=services route256/loms/internal/app/services StocksProvider
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/event_producer_mock.go -package=services route256/loms/internal/app/services EventProducer
 
 protoc-gen:
 	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) protoc --go_out=. --go-grpc_out=. --grpc-gateway_out=. --validate_out=lang=go:. -I vendor.protogen -I api/proto/ loms.proto

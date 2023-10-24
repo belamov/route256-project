@@ -47,11 +47,16 @@ type Transactor interface {
 	WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error
 }
 
+type EventProducer interface {
+	OrderStatusChangedEventEmit(ctx context.Context, order models.Order)
+}
+
 type lomsService struct {
 	ordersProvider         OrdersProvider
 	stocksProvider         StocksProvider
 	allowedOrderUnpaidTime time.Duration
 	transactor             Transactor
+	eventProducer          EventProducer
 }
 
 const DefaultAllowedOrderUnpaidTime = time.Minute * 10
@@ -61,6 +66,7 @@ func NewLomsService(
 	stocksProvider StocksProvider,
 	allowedOrderUnpaidTime time.Duration,
 	transactor Transactor,
+	eventProducer EventProducer,
 ) Loms {
 	if allowedOrderUnpaidTime == 0 {
 		allowedOrderUnpaidTime = DefaultAllowedOrderUnpaidTime
@@ -70,6 +76,7 @@ func NewLomsService(
 		stocksProvider:         stocksProvider,
 		allowedOrderUnpaidTime: allowedOrderUnpaidTime,
 		transactor:             transactor,
+		eventProducer:          eventProducer,
 	}
 }
 
