@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -16,7 +17,13 @@ type Querier interface {
 	CreateOrderItems(ctx context.Context, arg CreateOrderItemsParams) error
 	GetBySku(ctx context.Context, sku int64) (int64, error)
 	GetExpiredOrdersWithStatus(ctx context.Context, arg GetExpiredOrdersWithStatusParams) ([]int64, error)
+	GetLockedUnsentMessage(ctx context.Context, lockedBy pgtype.Text) ([]Outbox, error)
 	GetOrderById(ctx context.Context, id int64) ([]GetOrderByIdRow, error)
+	LockUnsentMessages(ctx context.Context, arg LockUnsentMessagesParams) error
+	SaveOutboxMessage(ctx context.Context, arg SaveOutboxMessageParams) error
+	SetMessageFailed(ctx context.Context, arg SetMessageFailedParams) error
+	SetMessageSent(ctx context.Context, arg SetMessageSentParams) error
+	UnlockUnsentMessages(ctx context.Context, arg UnlockUnsentMessagesParams) error
 	UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error
 }
 

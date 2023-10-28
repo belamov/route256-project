@@ -2,20 +2,67 @@ package kafka
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"route256/loms/internal/app/services"
 	"sync"
 
 	"github.com/IBM/sarama"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"route256/loms/internal/app/models"
 )
 
-var OrderStatusChangedTopicName = "order-status-changed"
-
 type Producer struct {
-	producer sarama.AsyncProducer
+	producer  sarama.AsyncProducer
+	successes chan services.OutboxMessage
+	fails     chan services.OutboxFailedMessage
+}
+
+func (p *Producer) ProduceMessage(ctx context.Context, message services.OutboxMessage) error {
+	msg, err := p.BuildMessage(message.GetTopic(), message.GetKey(), message.GetData())
+	if err != nil {
+		return fmt.Errorf("failed to build kafka message: %w", err)
+	}
+	p.producer.Input() <- msg
+	return nil
+}
+
+func (p *Producer) Successes() <-chan services.OutboxMessage {
+	return p.successes
+}
+
+func (p *Producer) Fails() <-chan services.OutboxFailedMessage {
+	return p.fails
+}
+
+type Message struct {
+	Key   string
+	Topic string
+	Data  []byte
+}
+
+func (k Message) GetKey() string {
+	return k.Key
+}
+
+func (k Message) GetData() []byte {
+	return k.Data
+}
+
+func (k Message) GetTopic() string {
+	return k.Topic
+}
+
+type FailedMessage struct {
+	Message Message
+	Error   error
+}
+
+func (f FailedMessage) GetMessage() services.OutboxMessage {
+	return f.Message
+}
+
+func (f FailedMessage) GetError() error {
+	return f.Error
 }
 
 func NewKafkaEventProducer(ctx context.Context, wg *sync.WaitGroup, brokers []string, opts ...Option) (*Producer, error) {
@@ -38,50 +85,78 @@ func NewKafkaEventProducer(ctx context.Context, wg *sync.WaitGroup, brokers []st
 		}
 	}()
 
+	producer := &Producer{
+		producer: asyncProducer,
+	}
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		// Error и Retry топики можно использовать при получении ошибки
-		for err := range asyncProducer.Errors() {
-			log.Err(err).Msg("kafka async producer error")
+		for msg := range asyncProducer.Errors() {
+			key, err := msg.Msg.Key.Encode()
+			if err != nil {
+				log.Err(err).Msg("failed to encode kafka message key")
+				continue
+			}
+
+			data, err := msg.Msg.Value.Encode()
+			if err != nil {
+				log.Err(err).Msg("failed to encode kafka message value")
+				continue
+			}
+
+			outboxFailedMessage := FailedMessage{
+				Message: Message{
+					Key:   string(key),
+					Topic: msg.Msg.Topic,
+					Data:  data,
+				},
+				Error: msg.Err,
+			}
+
+			log.Info().Msg(fmt.Sprintf("Async fail with key %s", outboxFailedMessage.Message.Key))
+			producer.fails <- outboxFailedMessage
 		}
+		close(producer.successes)
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for msg := range asyncProducer.Successes() {
-			log.Info().Msg(fmt.Sprintf("Async success with key %s", msg.Key))
+			key, err := msg.Key.Encode()
+			if err != nil {
+				log.Err(err).Msg("failed to encode kafka message key")
+				continue
+			}
+
+			data, err := msg.Value.Encode()
+			if err != nil {
+				log.Err(err).Msg("failed to encode kafka message value")
+				continue
+			}
+
+			outboxMessage := Message{
+				Key:   string(key),
+				Topic: msg.Topic,
+				Data:  data,
+			}
+
+			log.Info().Msg(fmt.Sprintf("Async success with key %s", outboxMessage.Key))
+			producer.successes <- outboxMessage
 		}
+		close(producer.successes)
 	}()
 
-	return &Producer{
-		producer: asyncProducer,
+	return producer, nil
+}
+
+func (p *Producer) BuildOutboxMessage(ctx context.Context, key string, data []byte, topic string) (services.OutboxMessage, error) {
+	return Message{
+		Key:   key,
+		Topic: topic,
+		Data:  data,
 	}, nil
-}
-
-type orderStatusInfo struct {
-	OrderId   int64              `json:"order_id"`
-	NewStatus models.OrderStatus `json:"new_status"`
-}
-
-func (p *Producer) OrderStatusChangedEventEmit(ctx context.Context, order models.Order) {
-	orderInfo := orderStatusInfo{
-		OrderId:   order.Id,
-		NewStatus: order.Status,
-	}
-
-	bytes, err := json.Marshal(orderInfo)
-	if err != nil {
-		log.Err(err).Msg("failed to marshal order info")
-	}
-
-	msg, err := p.BuildMessage(OrderStatusChangedTopicName, fmt.Sprint(order.Id), bytes, "x-header-example", "example-header-value")
-	if err != nil {
-		log.Err(err).Msg("failed to build kafka message")
-	}
-
-	p.producer.Input() <- msg
 }
 
 func (p *Producer) BuildMessage(topic string, key string, message []byte, headersKV ...string) (*sarama.ProducerMessage, error) {

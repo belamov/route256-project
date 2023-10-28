@@ -4,19 +4,13 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"sync"
-	"syscall"
-	"time"
-
-	"github.com/IBM/sarama"
-
-	"route256/loms/internal/app/events/kafka"
-
 	"route256/loms/internal/app"
 	grpcserver "route256/loms/internal/app/grpc/server"
 	httpserver "route256/loms/internal/app/http/server"
 	"route256/loms/internal/app/services"
 	"route256/loms/internal/app/storage/repositories"
+	"sync"
+	"syscall"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -42,29 +36,29 @@ func main() {
 	pgTransactor := repositories.NewPgTransactor(dbPool)
 
 	wg.Add(1)
-	eventProducer, err := kafka.NewKafkaEventProducer(
-		ctx,
-		wg,
-		config.KafkaBrokers,
-		kafka.WithRequiredAcks(sarama.NoResponse),
-		kafka.WithProducerPartitioner(sarama.NewHashPartitioner),
-		kafka.WithMaxOpenRequests(1),
-		kafka.WithMaxRetries(5),
-		kafka.WithRetryBackoff(10*time.Millisecond),
-		kafka.WithProducerFlushMessages(3),
-		kafka.WithProducerFlushFrequency(5*time.Second),
-	)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Cannot initialize kafka event producer")
-		return
-	}
+	//eventProducer, err := kafka.NewKafkaEventProducer(
+	//	ctx,
+	//	wg,
+	//	config.KafkaBrokers,
+	//	kafka.WithRequiredAcks(sarama.NoResponse),
+	//	kafka.WithProducerPartitioner(sarama.NewHashPartitioner),
+	//	kafka.WithMaxOpenRequests(1),
+	//	kafka.WithMaxRetries(5),
+	//	kafka.WithRetryBackoff(10*time.Millisecond),
+	//	kafka.WithProducerFlushMessages(3),
+	//	kafka.WithProducerFlushFrequency(5*time.Second),
+	//)
+	//if err != nil {
+	//	log.Fatal().Err(err).Msg("Cannot initialize kafka event producer")
+	//	return
+	//}
 
 	lomsService := services.NewLomsService(
 		orderPgRepository,
 		stockPgRepository,
 		config.AllowedOrderUnpaidTime,
 		pgTransactor,
-		eventProducer,
+		nil,
 	)
 
 	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, lomsService)
