@@ -26,7 +26,7 @@ type OrderItem struct {
 
 type Outbox struct {
 	ID           int64            `json:"id"`
-	Topic        string           `json:"topic"`
+	Destination  string           `json:"destination"`
 	Data         []byte           `json:"data"`
 	Key          string           `json:"key"`
 	SentAt       pgtype.Timestamp `json:"sent_at"`

@@ -13,8 +13,8 @@ type Notifier interface {
 }
 
 type orderStatusInfo struct {
-	OrderId   int64  `json:"order_id,required"`
-	NewStatus uint16 `json:"new_status,required"`
+	OrderId   int64  `json:"order_id"`
+	NewStatus uint16 `json:"new_status"`
 }
 
 func (info *orderStatusInfo) validate() error {

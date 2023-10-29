@@ -3,9 +3,10 @@ package repositories
 import (
 	"context"
 	"math/rand"
-	"sync"
 	"testing"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/stretchr/testify/assert"
 	"route256/loms/internal/app"
@@ -19,8 +20,7 @@ import (
 type OrderPgRepositoryTestSuite struct {
 	suite.Suite
 	repo   *OrderPgRepository
-	cancel context.CancelFunc
-	wg     *sync.WaitGroup
+	dbPool *pgxpool.Pool
 }
 
 func TestOrderPgRepositoryTestSuite(t *testing.T) {
@@ -28,25 +28,19 @@ func TestOrderPgRepositoryTestSuite(t *testing.T) {
 }
 
 func (t *OrderPgRepositoryTestSuite) SetupSuite() {
-	ctx, cancel := context.WithCancel(context.Background())
-	wg := &sync.WaitGroup{}
-
 	config := app.BuildConfig()
 
-	wg.Add(1)
-	dbPool, err := InitPostgresDbConnection(ctx, wg, config)
+	dbPool, err := InitPostgresDbConnection(config)
 	require.NoError(t.T(), err)
 
 	repo := NewOrderPgRepository(dbPool)
 	require.NoError(t.T(), err)
 	t.repo = repo
-	t.cancel = cancel
-	t.wg = wg
+	t.dbPool = dbPool
 }
 
 func (t *OrderPgRepositoryTestSuite) TearDownSuite() {
-	t.cancel()
-	t.wg.Wait()
+	t.dbPool.Close()
 }
 
 func (t *OrderPgRepositoryTestSuite) TestRepository() {

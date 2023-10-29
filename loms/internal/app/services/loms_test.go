@@ -21,7 +21,7 @@ type LomsTestSuite struct {
 	mockCtrl           *gomock.Controller
 	mockOrdersProvider *MockOrdersProvider
 	mockStocksProvider *MockStocksProvider
-	mockEventProducer  *MockEventProducer
+	mockEventProducer  *MockOrderEventsProducer
 	loms               Loms
 }
 
@@ -47,7 +47,7 @@ func (ts *LomsTestSuite) SetupSuite() {
 	ts.mockCtrl = gomock.NewController(Reporter{ts.T()})
 	ts.mockStocksProvider = NewMockStocksProvider(ts.mockCtrl)
 	ts.mockOrdersProvider = NewMockOrdersProvider(ts.mockCtrl)
-	ts.mockEventProducer = NewMockEventProducer(ts.mockCtrl)
+	ts.mockEventProducer = NewMockOrderEventsProducer(ts.mockCtrl)
 	ts.loms = NewLomsService(ts.mockOrdersProvider, ts.mockStocksProvider, DefaultAllowedOrderUnpaidTime, MockTransactor{}, ts.mockEventProducer)
 }
 
@@ -84,6 +84,7 @@ func (ts *LomsTestSuite) TestCreateOrder() {
 	ts.mockStocksProvider.EXPECT().Reserve(ctx, gomock.Any()).Return(nil)
 	ts.mockOrdersProvider.EXPECT().Create(ctx, userId, gomock.Any(), orderItems).Return(newOrder, nil)
 	ts.mockOrdersProvider.EXPECT().SetStatus(ctx, gomock.Any(), gomock.Any()).Return(awaitingOrder, nil)
+	ts.mockEventProducer.EXPECT().OrderStatusChangedEventEmit(gomock.Any(), gomock.Any()).Return(nil)
 
 	order, err := ts.loms.OrderCreate(ctx, userId, orderItems)
 	assert.NoError(ts.T(), err)
@@ -119,6 +120,7 @@ func (ts *LomsTestSuite) TestCreateOrderInsufficientStocks() {
 	ts.mockOrdersProvider.EXPECT().Create(ctx, userId, gomock.Any(), orderItems).Return(newOrder, nil)
 	ts.mockStocksProvider.EXPECT().Reserve(ctx, gomock.Any()).Return(storage.ErrInsufficientStocks)
 	ts.mockOrdersProvider.EXPECT().SetStatus(ctx, gomock.Any(), gomock.Any()).Return(failedOrder, nil)
+	ts.mockEventProducer.EXPECT().OrderStatusChangedEventEmit(gomock.Any(), gomock.Any()).Return(nil)
 
 	order, err := ts.loms.OrderCreate(ctx, userId, orderItems)
 	assert.ErrorIs(ts.T(), err, ErrInsufficientStocks)
@@ -175,6 +177,7 @@ func (ts *LomsTestSuite) TestRunCancelUnpaidOrders() {
 	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(gomock.Any(), orderId).AnyTimes().Return(orderToCancel, nil)
 	ts.mockStocksProvider.EXPECT().ReserveCancel(gomock.Any(), orderToCancel).AnyTimes().Return(nil)
 	ts.mockOrdersProvider.EXPECT().SetStatus(gomock.Any(), orderToCancel, gomock.Any()).AnyTimes().Return(orderToCancel, nil)
+	ts.mockEventProducer.EXPECT().OrderStatusChangedEventEmit(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -221,6 +224,7 @@ func (ts *LomsTestSuite) TestOrderPay() {
 	ts.mockOrdersProvider.EXPECT().GetOrderByOrderId(ctx, order.Id).Return(order, nil)
 	ts.mockStocksProvider.EXPECT().ReserveRemove(ctx, order).Return(nil)
 	ts.mockOrdersProvider.EXPECT().SetStatus(ctx, order, gomock.Any()).Return(order, nil)
+	ts.mockEventProducer.EXPECT().OrderStatusChangedEventEmit(gomock.Any(), gomock.Any()).Return(nil)
 
 	err := ts.loms.OrderPay(ctx, order.Id)
 	assert.NoError(ts.T(), err)

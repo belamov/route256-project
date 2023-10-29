@@ -66,7 +66,7 @@ func NewLomsService(
 	stocksProvider StocksProvider,
 	allowedOrderUnpaidTime time.Duration,
 	transactor Transactor,
-	eventProducer OrderEventsProducer,
+	orderEventsProducer OrderEventsProducer,
 ) Loms {
 	if allowedOrderUnpaidTime == 0 {
 		allowedOrderUnpaidTime = DefaultAllowedOrderUnpaidTime
@@ -76,7 +76,7 @@ func NewLomsService(
 		stocksProvider:         stocksProvider,
 		allowedOrderUnpaidTime: allowedOrderUnpaidTime,
 		transactor:             transactor,
-		orderEventsProducer:    eventProducer,
+		orderEventsProducer:    orderEventsProducer,
 	}
 }
 

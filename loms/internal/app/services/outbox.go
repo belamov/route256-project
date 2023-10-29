@@ -4,56 +4,48 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"route256/loms/internal/app/models"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"route256/loms/internal/app/models"
 )
 
-var OrderStatusChangedTopicName = "order-status-changed"
-
-type OutboxRepo interface {
-	SaveMessage(ctx context.Context, message OutboxMessage) error
-	ClearLocks(outboxId string) error
-	LockUnsentMessages(ctx context.Context, outboxId string) error
-	GetLockedUnsentMessages(ctx context.Context, outboxId string) ([]OutboxMessage, error)
-	SetMessageSent(ctx context.Context, message OutboxMessage) error
-	SetMessageFailed(ctx context.Context, message OutboxMessage, err error) error
-	GetFailedMessages(ctx context.Context, outboxId string) ([]OutboxFailedMessage, error)
-}
-
-type EventProducer interface {
-	BuildOutboxMessage(ctx context.Context, key string, data []byte, topic string) (OutboxMessage, error)
-	ProduceMessage(ctx context.Context, message OutboxMessage) error
-	Successes() <-chan OutboxMessage
-	Fails() <-chan OutboxFailedMessage
-}
-
 type Outbox struct {
-	repo     OutboxRepo
-	producer EventProducer
+	repo     MessagesProvider
+	producer MessagesProducer
 	id       string
 }
 
-type OutboxMessage interface {
-	GetKey() string
-	GetData() []byte
-	GetTopic() string
+func NewOutbox(outboxId string, producer MessagesProducer, provider MessagesProvider) *Outbox {
+	return &Outbox{
+		repo:     provider,
+		producer: producer,
+		id:       outboxId,
+	}
 }
 
-type OutboxFailedMessage interface {
-	GetMessage() OutboxMessage
-	GetError() error
+var OrderStatusChangedTopicName = "order-status-changed"
+
+type MessagesProvider interface {
+	SaveMessage(ctx context.Context, message models.OutboxMessage) error
+	ClearLocks(ctx context.Context, outboxId string) error
+	LockUnsentMessages(ctx context.Context, outboxId string) error
+	GetLockedUnsentMessages(ctx context.Context, outboxId string) ([]models.OutboxMessage, error)
+	SetMessageSent(ctx context.Context, message models.OutboxMessage) error
+	SetMessageFailed(ctx context.Context, message models.OutboxMessage, err error) error
+	GetFailedMessages(ctx context.Context, outboxId string) ([]models.OutboxFailedMessage, error)
 }
 
-type orderStatusInfo struct {
-	OrderId   int64              `json:"order_id"`
-	NewStatus models.OrderStatus `json:"new_status"`
+type MessagesProducer interface {
+	ProduceMessage(ctx context.Context, message models.OutboxMessage) error
+	Successes() <-chan models.OutboxMessage
+	Fails() <-chan models.OutboxFailedMessage
 }
 
 func (o *Outbox) OrderStatusChangedEventEmit(ctx context.Context, order models.Order) error {
-	orderInfo := orderStatusInfo{
+	orderInfo := models.OrderStatusInfo{
 		OrderId:   order.Id,
 		NewStatus: order.Status,
 	}
@@ -64,15 +56,10 @@ func (o *Outbox) OrderStatusChangedEventEmit(ctx context.Context, order models.O
 		return fmt.Errorf("failed to marshal order info: %w", err)
 	}
 
-	message, err := o.producer.BuildOutboxMessage(
-		ctx,
-		strconv.FormatInt(order.Id, 10),
-		bytes,
-		OrderStatusChangedTopicName,
-	)
-	if err != nil {
-		log.Err(err).Msg("failed to build outbox message")
-		return fmt.Errorf("failed to build outbox message: %w", err)
+	message := models.OutboxMessage{
+		Key:         strconv.FormatInt(order.Id, 10),
+		Destination: OrderStatusChangedTopicName,
+		Data:        bytes,
 	}
 
 	err = o.SaveMessage(ctx, message)
@@ -84,7 +71,7 @@ func (o *Outbox) OrderStatusChangedEventEmit(ctx context.Context, order models.O
 	return nil
 }
 
-func (o *Outbox) SaveMessage(ctx context.Context, message OutboxMessage) error {
+func (o *Outbox) SaveMessage(ctx context.Context, message models.OutboxMessage) error {
 	err := o.repo.SaveMessage(ctx, message)
 	if err != nil {
 		return fmt.Errorf("error saving outbox message: %w", err)
@@ -113,7 +100,7 @@ func (o *Outbox) StartSendingMessages(ctx context.Context, wg *sync.WaitGroup, s
 			log.Info().Msg("stopping sending outbox messages...")
 			ticker.Stop()
 			log.Info().Msg("clearing outbox locks...")
-			err := o.repo.ClearLocks(o.id)
+			err := o.repo.ClearLocks(context.Background(), o.id)
 			if err != nil {
 				log.Error().Err(err).Msg("failed to clear locks for outbox")
 			}
@@ -169,7 +156,7 @@ func (o *Outbox) ProcessFailedMessages(ctx context.Context, wg *sync.WaitGroup) 
 	for {
 		select {
 		case failedMessage := <-o.producer.Fails():
-			err := o.repo.SetMessageFailed(ctx, failedMessage.GetMessage(), failedMessage.GetError())
+			err := o.repo.SetMessageFailed(ctx, failedMessage.Message, failedMessage.Error)
 			if err != nil {
 				log.Error().Err(err).Msg("failed to set outbox message as sent")
 			}
@@ -195,7 +182,7 @@ func (o *Outbox) StartRetryingFailedMessages(ctx context.Context, wg *sync.WaitG
 			}
 
 			for _, message := range unsentFailedMessages {
-				err = o.producer.ProduceMessage(ctx, message.GetMessage())
+				err = o.producer.ProduceMessage(ctx, message.Message)
 				if err != nil {
 					log.Error().Err(err).Msg("failed to produce messages")
 					continue

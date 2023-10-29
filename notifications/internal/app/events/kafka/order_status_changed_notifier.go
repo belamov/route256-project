@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -116,7 +115,7 @@ func newConsumerGroup(brokers []string, groupID string) (sarama.ConsumerGroup, e
 	case "range":
 		config.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.NewBalanceStrategyRange()}
 	default:
-		return nil, errors.New(fmt.Sprintf("Unrecognized consumer group partition assignor: %s", BalanceStrategy))
+		return nil, fmt.Errorf("unrecognized consumer group partition assignor: %s", BalanceStrategy)
 	}
 
 	/*

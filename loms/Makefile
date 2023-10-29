@@ -38,11 +38,15 @@ migrate: up
 	$(docker_compose_bin) -f $(docker_compose_yml) exec $(app) goose -dir internal/app/storage/migrations up
 	$(docker_compose_bin) -f $(docker_compose_yml) stop
 
+migrate-rollback: up
+	$(docker_compose_bin) -f $(docker_compose_yml) exec $(app) goose -dir internal/app/storage/migrations down
+	$(docker_compose_bin) -f $(docker_compose_yml) stop
+
 mock:
 	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/loms_mock.go -package=services route256/loms/internal/app/services Loms
 	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/orders_provider_mock.go -package=services route256/loms/internal/app/services OrdersProvider
 	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/stock_provider_mock.go -package=services route256/loms/internal/app/services StocksProvider
-	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/event_producer_mock.go -package=services route256/loms/internal/app/services EventProducer
+	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) mockgen -destination=internal/app/services/order_event_producer_mock.go -package=services route256/loms/internal/app/services OrderEventsProducer
 
 protoc-gen:
 	$(docker_compose_bin) -f $(docker_compose_yml) run --rm $(app) protoc --go_out=. --go-grpc_out=. --grpc-gateway_out=. --validate_out=lang=go:. -I vendor.protogen -I api/proto/ loms.proto

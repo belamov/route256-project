@@ -3,8 +3,9 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"route256/loms/internal/app/services"
 	"sync"
+
+	"route256/loms/internal/app/models"
 
 	"github.com/IBM/sarama"
 	"github.com/pkg/errors"
@@ -13,56 +14,29 @@ import (
 
 type Producer struct {
 	producer  sarama.AsyncProducer
-	successes chan services.OutboxMessage
-	fails     chan services.OutboxFailedMessage
+	successes chan models.OutboxMessage
+	fails     chan models.OutboxFailedMessage
 }
 
-func (p *Producer) ProduceMessage(ctx context.Context, message services.OutboxMessage) error {
-	msg, err := p.BuildMessage(message.GetTopic(), message.GetKey(), message.GetData())
+func (p *Producer) ProduceMessage(ctx context.Context, message models.OutboxMessage) error {
+	msg, err := p.BuildMessage(message.Destination, message.Key, message.Data)
 	if err != nil {
 		return fmt.Errorf("failed to build kafka message: %w", err)
 	}
-	p.producer.Input() <- msg
-	return nil
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case p.producer.Input() <- msg:
+		return nil
+	}
 }
 
-func (p *Producer) Successes() <-chan services.OutboxMessage {
+func (p *Producer) Successes() <-chan models.OutboxMessage {
 	return p.successes
 }
 
-func (p *Producer) Fails() <-chan services.OutboxFailedMessage {
+func (p *Producer) Fails() <-chan models.OutboxFailedMessage {
 	return p.fails
-}
-
-type Message struct {
-	Key   string
-	Topic string
-	Data  []byte
-}
-
-func (k Message) GetKey() string {
-	return k.Key
-}
-
-func (k Message) GetData() []byte {
-	return k.Data
-}
-
-func (k Message) GetTopic() string {
-	return k.Topic
-}
-
-type FailedMessage struct {
-	Message Message
-	Error   error
-}
-
-func (f FailedMessage) GetMessage() services.OutboxMessage {
-	return f.Message
-}
-
-func (f FailedMessage) GetError() error {
-	return f.Error
 }
 
 func NewKafkaEventProducer(ctx context.Context, wg *sync.WaitGroup, brokers []string, opts ...Option) (*Producer, error) {
@@ -86,7 +60,9 @@ func NewKafkaEventProducer(ctx context.Context, wg *sync.WaitGroup, brokers []st
 	}()
 
 	producer := &Producer{
-		producer: asyncProducer,
+		producer:  asyncProducer,
+		successes: make(chan models.OutboxMessage),
+		fails:     make(chan models.OutboxFailedMessage),
 	}
 
 	wg.Add(1)
@@ -105,11 +81,11 @@ func NewKafkaEventProducer(ctx context.Context, wg *sync.WaitGroup, brokers []st
 				continue
 			}
 
-			outboxFailedMessage := FailedMessage{
-				Message: Message{
-					Key:   string(key),
-					Topic: msg.Msg.Topic,
-					Data:  data,
+			outboxFailedMessage := models.OutboxFailedMessage{
+				Message: models.OutboxMessage{
+					Key:         string(key),
+					Destination: msg.Msg.Topic,
+					Data:        data,
 				},
 				Error: msg.Err,
 			}
@@ -117,7 +93,7 @@ func NewKafkaEventProducer(ctx context.Context, wg *sync.WaitGroup, brokers []st
 			log.Info().Msg(fmt.Sprintf("Async fail with key %s", outboxFailedMessage.Message.Key))
 			producer.fails <- outboxFailedMessage
 		}
-		close(producer.successes)
+		close(producer.fails)
 	}()
 
 	wg.Add(1)
@@ -136,10 +112,10 @@ func NewKafkaEventProducer(ctx context.Context, wg *sync.WaitGroup, brokers []st
 				continue
 			}
 
-			outboxMessage := Message{
-				Key:   string(key),
-				Topic: msg.Topic,
-				Data:  data,
+			outboxMessage := models.OutboxMessage{
+				Key:         string(key),
+				Destination: msg.Topic,
+				Data:        data,
 			}
 
 			log.Info().Msg(fmt.Sprintf("Async success with key %s", outboxMessage.Key))
@@ -149,14 +125,6 @@ func NewKafkaEventProducer(ctx context.Context, wg *sync.WaitGroup, brokers []st
 	}()
 
 	return producer, nil
-}
-
-func (p *Producer) BuildOutboxMessage(ctx context.Context, key string, data []byte, topic string) (services.OutboxMessage, error) {
-	return Message{
-		Key:   key,
-		Topic: topic,
-		Data:  data,
-	}, nil
 }
 
 func (p *Producer) BuildMessage(topic string, key string, message []byte, headersKV ...string) (*sarama.ProducerMessage, error) {

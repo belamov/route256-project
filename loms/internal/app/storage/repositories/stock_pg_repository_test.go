@@ -3,9 +3,10 @@ package repositories
 import (
 	"context"
 	"math/rand"
-	"sync"
 	"testing"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"route256/loms/internal/app/storage"
 
@@ -20,8 +21,7 @@ import (
 type StockPgRepositoryTestSuite struct {
 	suite.Suite
 	repo   *StocksPgRepository
-	cancel context.CancelFunc
-	wg     *sync.WaitGroup
+	dbPool *pgxpool.Pool
 }
 
 func TestStockPgRepositoryTestSuite(t *testing.T) {
@@ -29,25 +29,20 @@ func TestStockPgRepositoryTestSuite(t *testing.T) {
 }
 
 func (t *StockPgRepositoryTestSuite) SetupSuite() {
-	ctx, cancel := context.WithCancel(context.Background())
-	wg := &sync.WaitGroup{}
-
 	config := app.BuildConfig()
 
-	wg.Add(1)
-	dbPool, err := InitPostgresDbConnection(ctx, wg, config)
+	dbPool, err := InitPostgresDbConnection(config)
 	require.NoError(t.T(), err)
+
+	t.dbPool = dbPool
 
 	repo := NewStocksPgRepository(dbPool)
 	require.NoError(t.T(), err)
 	t.repo = repo
-	t.cancel = cancel
-	t.wg = wg
 }
 
 func (t *StockPgRepositoryTestSuite) TearDownSuite() {
-	t.cancel()
-	t.wg.Wait()
+	t.dbPool.Close()
 }
 
 func (t *StockPgRepositoryTestSuite) TestRepository() {
