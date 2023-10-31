@@ -29,7 +29,7 @@ func NewOutbox(outboxId string, producer MessagesProducer, provider MessagesProv
 var OrderStatusChangedTopicName = "order-status-changed"
 
 type MessagesProvider interface {
-	SaveMessage(ctx context.Context, message models.OutboxMessage) error
+	SaveMessage(ctx context.Context, message models.OutboxMessage) (models.OutboxMessage, error)
 	ClearLocks(ctx context.Context, outboxId string) error
 	LockUnsentMessages(ctx context.Context, outboxId string) error
 	GetLockedUnsentMessages(ctx context.Context, outboxId string) ([]models.OutboxMessage, error)
@@ -62,7 +62,7 @@ func (o *Outbox) OrderStatusChangedEventEmit(ctx context.Context, order models.O
 		Data:        bytes,
 	}
 
-	err = o.SaveMessage(ctx, message)
+	_, err = o.SaveMessage(ctx, message)
 	if err != nil {
 		log.Err(err).Msg("failed to save outbox message")
 		return fmt.Errorf("failed to save outbox message: %w", err)
@@ -71,12 +71,12 @@ func (o *Outbox) OrderStatusChangedEventEmit(ctx context.Context, order models.O
 	return nil
 }
 
-func (o *Outbox) SaveMessage(ctx context.Context, message models.OutboxMessage) error {
-	err := o.repo.SaveMessage(ctx, message)
+func (o *Outbox) SaveMessage(ctx context.Context, message models.OutboxMessage) (models.OutboxMessage, error) {
+	message, err := o.repo.SaveMessage(ctx, message)
 	if err != nil {
-		return fmt.Errorf("error saving outbox message: %w", err)
+		return message, fmt.Errorf("error saving outbox message: %w", err)
 	}
-	return nil
+	return message, nil
 }
 
 func (o *Outbox) StartSendingMessages(ctx context.Context, wg *sync.WaitGroup, sendInterval time.Duration) {

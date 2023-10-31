@@ -24,7 +24,7 @@ func NewOutboxPgRepository(dbPool *pgxpool.Pool) *OutboxPgRepository {
 	}
 }
 
-func (o *OutboxPgRepository) SaveMessage(ctx context.Context, message models.OutboxMessage) error {
+func (o *OutboxPgRepository) SaveMessage(ctx context.Context, message models.OutboxMessage) (models.OutboxMessage, error) {
 	q := o.transactions.getQueriesFromContext(ctx, o.dbPool)
 
 	params := queries.SaveOutboxMessageParams{
@@ -32,12 +32,14 @@ func (o *OutboxPgRepository) SaveMessage(ctx context.Context, message models.Out
 		Destination: message.Destination,
 		Data:        message.Data,
 	}
-	err := q.SaveOutboxMessage(ctx, params)
+	messageId, err := q.SaveOutboxMessage(ctx, params)
 	if err != nil {
-		return fmt.Errorf("failed to save outbox message: %w", err)
+		return message, fmt.Errorf("failed to save outbox message: %w", err)
 	}
 
-	return nil
+	message.Id = messageId
+
+	return message, nil
 }
 
 func (o *OutboxPgRepository) ClearLocks(ctx context.Context, outboxId string) error {

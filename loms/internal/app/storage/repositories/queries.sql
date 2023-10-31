@@ -22,8 +22,8 @@ select count from stocks where sku = $1;
 -- name: ChangeReserveOfSkuByAmount :execresult
 update stocks set count = count + $1 where sku = $2 returning id;
 
--- name: SaveOutboxMessage :exec
-insert into outbox (key, destination, data) values ($1, $2, $3);
+-- name: SaveOutboxMessage :one
+insert into outbox (key, destination, data) values ($1, $2, $3) returning id;
 
 -- name: GetLockedUnsentMessage :many
 select * from outbox where locked_by=$1 and sent_at is null;
@@ -35,7 +35,7 @@ select * from outbox where locked_by=$1 and error_message is not null and sent_a
 update outbox set locked_by=$1, locked_at=now() where locked_by is null and locked_at is null and sent_at is null;
 
 -- name: UnlockUnsentMessages :exec
-update outbox set locked_by=$1 where sent_at is null;
+update outbox set locked_by=null, locked_at = null where sent_at is null and locked_by=$1;
 
 -- name: SetMessageSent :exec
 update outbox set sent_at = now() where id=$1;

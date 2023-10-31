@@ -21,7 +21,7 @@ type Querier interface {
 	GetLockedUnsentMessage(ctx context.Context, lockedBy pgtype.Text) ([]Outbox, error)
 	GetOrderById(ctx context.Context, id int64) ([]GetOrderByIdRow, error)
 	LockUnsentMessages(ctx context.Context, lockedBy pgtype.Text) error
-	SaveOutboxMessage(ctx context.Context, arg SaveOutboxMessageParams) error
+	SaveOutboxMessage(ctx context.Context, arg SaveOutboxMessageParams) (int64, error)
 	SetMessageFailed(ctx context.Context, arg SetMessageFailedParams) error
 	SetMessageSent(ctx context.Context, id int64) error
 	UnlockUnsentMessages(ctx context.Context, lockedBy pgtype.Text) error

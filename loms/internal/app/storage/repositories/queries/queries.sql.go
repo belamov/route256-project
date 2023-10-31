@@ -227,8 +227,8 @@ func (q *Queries) LockUnsentMessages(ctx context.Context, lockedBy pgtype.Text) 
 	return err
 }
 
-const saveOutboxMessage = `-- name: SaveOutboxMessage :exec
-insert into outbox (key, destination, data) values ($1, $2, $3)
+const saveOutboxMessage = `-- name: SaveOutboxMessage :one
+insert into outbox (key, destination, data) values ($1, $2, $3) returning id
 `
 
 type SaveOutboxMessageParams struct {
@@ -237,9 +237,11 @@ type SaveOutboxMessageParams struct {
 	Data        []byte `json:"data"`
 }
 
-func (q *Queries) SaveOutboxMessage(ctx context.Context, arg SaveOutboxMessageParams) error {
-	_, err := q.db.Exec(ctx, saveOutboxMessage, arg.Key, arg.Destination, arg.Data)
-	return err
+func (q *Queries) SaveOutboxMessage(ctx context.Context, arg SaveOutboxMessageParams) (int64, error) {
+	row := q.db.QueryRow(ctx, saveOutboxMessage, arg.Key, arg.Destination, arg.Data)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const setMessageFailed = `-- name: SetMessageFailed :exec
@@ -266,7 +268,7 @@ func (q *Queries) SetMessageSent(ctx context.Context, id int64) error {
 }
 
 const unlockUnsentMessages = `-- name: UnlockUnsentMessages :exec
-update outbox set locked_by=$1 where sent_at is null
+update outbox set locked_by=null, locked_at = null where sent_at is null and locked_by=$1
 `
 
 func (q *Queries) UnlockUnsentMessages(ctx context.Context, lockedBy pgtype.Text) error {
