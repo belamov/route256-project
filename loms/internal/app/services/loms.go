@@ -47,11 +47,16 @@ type Transactor interface {
 	WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error
 }
 
+type OrderEventsProducer interface {
+	OrderStatusChangedEventEmit(ctx context.Context, order models.Order) error
+}
+
 type lomsService struct {
 	ordersProvider         OrdersProvider
 	stocksProvider         StocksProvider
 	allowedOrderUnpaidTime time.Duration
 	transactor             Transactor
+	orderEventsProducer    OrderEventsProducer
 }
 
 const DefaultAllowedOrderUnpaidTime = time.Minute * 10
@@ -61,6 +66,7 @@ func NewLomsService(
 	stocksProvider StocksProvider,
 	allowedOrderUnpaidTime time.Duration,
 	transactor Transactor,
+	orderEventsProducer OrderEventsProducer,
 ) Loms {
 	if allowedOrderUnpaidTime == 0 {
 		allowedOrderUnpaidTime = DefaultAllowedOrderUnpaidTime
@@ -70,6 +76,7 @@ func NewLomsService(
 		stocksProvider:         stocksProvider,
 		allowedOrderUnpaidTime: allowedOrderUnpaidTime,
 		transactor:             transactor,
+		orderEventsProducer:    orderEventsProducer,
 	}
 }
 
@@ -84,7 +91,7 @@ func (l *lomsService) OrderCreate(ctx context.Context, userId int64, items []mod
 	err = l.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		err = l.stocksProvider.Reserve(ctx, order)
 		if errors.Is(err, storage.ErrInsufficientStocks) {
-			failedOrder, errSetStatus := l.ordersProvider.SetStatus(ctx, order, models.OrderStatusFailed)
+			failedOrder, errSetStatus := l.SetOrderStatus(ctx, order, models.OrderStatusFailed)
 			if errSetStatus != nil {
 				log.Err(errSetStatus).
 					Int64("orderId", failedOrder.Id).
@@ -98,7 +105,7 @@ func (l *lomsService) OrderCreate(ctx context.Context, userId int64, items []mod
 			return fmt.Errorf("cannot reserve stocks: %w", err)
 		}
 
-		order, err = l.ordersProvider.SetStatus(ctx, order, models.OrderStatusAwaitingPayment)
+		order, err = l.SetOrderStatus(ctx, order, models.OrderStatusAwaitingPayment)
 		if err != nil {
 			log.Err(err).
 				Int64("orderId", order.Id).
@@ -156,7 +163,7 @@ func (l *lomsService) OrderPay(ctx context.Context, orderId int64) error {
 			return fmt.Errorf("failed removing reserve!: %w", err)
 		}
 
-		_, err = l.ordersProvider.SetStatus(ctx, order, models.OrderStatusPayed)
+		_, err = l.SetOrderStatus(ctx, order, models.OrderStatusPayed)
 		if err != nil {
 			log.Err(err).
 				Any("orderId", orderId).
@@ -189,7 +196,7 @@ func (l *lomsService) OrderCancel(ctx context.Context, orderId int64) error {
 			return fmt.Errorf("failed canceling reserve!: %w", err)
 		}
 
-		_, err = l.ordersProvider.SetStatus(ctx, order, models.OrderStatusCancelled)
+		_, err = l.SetOrderStatus(ctx, order, models.OrderStatusCancelled)
 		if err != nil {
 			log.Err(err).
 				Any("orderId", orderId).
@@ -244,4 +251,18 @@ func (l *lomsService) RunCancelUnpaidOrders(ctx context.Context, wg *sync.WaitGr
 			}
 		}
 	}
+}
+
+func (l *lomsService) SetOrderStatus(ctx context.Context, order models.Order, newStatus models.OrderStatus) (models.Order, error) {
+	updatedOrder, err := l.ordersProvider.SetStatus(ctx, order, newStatus)
+	if err != nil {
+		return updatedOrder, fmt.Errorf("failed to set order status: %w", err)
+	}
+
+	err = l.orderEventsProducer.OrderStatusChangedEventEmit(ctx, updatedOrder)
+	if err != nil {
+		return updatedOrder, fmt.Errorf("failed to emit order status changed event: %w", err)
+	}
+
+	return updatedOrder, nil
 }

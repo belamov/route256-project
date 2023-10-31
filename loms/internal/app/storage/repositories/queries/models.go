@@ -23,3 +23,16 @@ type OrderItem struct {
 	Count   int64  `json:"count"`
 	Price   int64  `json:"price"`
 }
+
+type Outbox struct {
+	ID           int64            `json:"id"`
+	Destination  string           `json:"destination"`
+	Data         []byte           `json:"data"`
+	Key          string           `json:"key"`
+	SentAt       pgtype.Timestamp `json:"sent_at"`
+	ErrorMessage pgtype.Text      `json:"error_message"`
+	RetryCount   pgtype.Int2      `json:"retry_count"`
+	LockedBy     pgtype.Text      `json:"locked_by"`
+	LockedAt     pgtype.Timestamp `json:"locked_at"`
+	CreatedAt    pgtype.Timestamp `json:"created_at"`
+}

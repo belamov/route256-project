@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -16,8 +15,12 @@ type Config struct {
 	CancelUnpaidOrdersInterval time.Duration `default:"1m" split_words:"true"`
 	DbUser                     string        `default:"postgres" split_words:"true"`
 	DbPassword                 string        `default:"password" split_words:"true"`
-	DbHost                     string        `default:"db:5432" split_words:"true"`
+	DbHost                     string        `default:"localhost:5432" split_words:"true"`
 	DbName                     string        `default:"loms" split_words:"true"`
+	KafkaBrokers               []string      `default:"localhost:9091,localhost:9092,localhost:9093" split_words:"true"`
+	OutboxId                   string        `default:"notifications-1" split_words:"true"`
+	OutboxSendInterval         time.Duration `default:"1m" split_words:"true"`
+	OutboxRetryInterval        time.Duration `default:"10m" split_words:"true"`
 }
 
 func BuildConfig() *Config {
@@ -28,30 +31,7 @@ func BuildConfig() *Config {
 		log.Panic().Err(err).Msg("cant build config")
 	}
 
-	log.Info().Msg("App config:\n" + config.String())
+	log.Info().Any("App config", config)
 
 	return &config
-}
-
-func (config Config) String() string {
-	return fmt.Sprintf(
-		"HttpServerAddress: %v\n"+
-			"GrpcServerAddress: %v\n"+
-			"GrpcGatewayServerAddress: %v\n"+
-			"AllowedOrderUnpaidTime: %v\n"+
-			"CancelUnpaidOrdersInterval: %v\n"+
-			"DbHost: %v\n"+
-			"DbName: %v\n"+
-			"DbUser: %v\n"+
-			"DbPassword: %v\n",
-		config.HttpServerAddress,
-		config.GrpcServerAddress,
-		config.GrpcGatewayServerAddress,
-		config.AllowedOrderUnpaidTime,
-		config.CancelUnpaidOrdersInterval,
-		config.DbHost,
-		config.DbName,
-		config.DbUser,
-		config.DbPassword,
-	)
 }

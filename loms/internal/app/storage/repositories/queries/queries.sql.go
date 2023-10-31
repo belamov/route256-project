@@ -106,6 +106,76 @@ func (q *Queries) GetExpiredOrdersWithStatus(ctx context.Context, arg GetExpired
 	return items, nil
 }
 
+const getFailedMessage = `-- name: GetFailedMessage :many
+select id, destination, data, key, sent_at, error_message, retry_count, locked_by, locked_at, created_at from outbox where locked_by=$1 and error_message is not null and sent_at is null
+`
+
+func (q *Queries) GetFailedMessage(ctx context.Context, lockedBy pgtype.Text) ([]Outbox, error) {
+	rows, err := q.db.Query(ctx, getFailedMessage, lockedBy)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Outbox
+	for rows.Next() {
+		var i Outbox
+		if err := rows.Scan(
+			&i.ID,
+			&i.Destination,
+			&i.Data,
+			&i.Key,
+			&i.SentAt,
+			&i.ErrorMessage,
+			&i.RetryCount,
+			&i.LockedBy,
+			&i.LockedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getLockedUnsentMessage = `-- name: GetLockedUnsentMessage :many
+select id, destination, data, key, sent_at, error_message, retry_count, locked_by, locked_at, created_at from outbox where locked_by=$1 and sent_at is null
+`
+
+func (q *Queries) GetLockedUnsentMessage(ctx context.Context, lockedBy pgtype.Text) ([]Outbox, error) {
+	rows, err := q.db.Query(ctx, getLockedUnsentMessage, lockedBy)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Outbox
+	for rows.Next() {
+		var i Outbox
+		if err := rows.Scan(
+			&i.ID,
+			&i.Destination,
+			&i.Data,
+			&i.Key,
+			&i.SentAt,
+			&i.ErrorMessage,
+			&i.RetryCount,
+			&i.LockedBy,
+			&i.LockedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getOrderById = `-- name: GetOrderById :many
 select o.id, o.created_at, o.user_id, o.status, oi.id, oi.order_id, oi.name, oi.sku, oi.count, oi.price from orders o
     left join order_items oi on o.id = oi.order_id
@@ -146,6 +216,64 @@ func (q *Queries) GetOrderById(ctx context.Context, id int64) ([]GetOrderByIdRow
 		return nil, err
 	}
 	return items, nil
+}
+
+const lockUnsentMessages = `-- name: LockUnsentMessages :exec
+update outbox set locked_by=$1, locked_at=now() where locked_by is null and locked_at is null and sent_at is null
+`
+
+func (q *Queries) LockUnsentMessages(ctx context.Context, lockedBy pgtype.Text) error {
+	_, err := q.db.Exec(ctx, lockUnsentMessages, lockedBy)
+	return err
+}
+
+const saveOutboxMessage = `-- name: SaveOutboxMessage :one
+insert into outbox (key, destination, data) values ($1, $2, $3) returning id
+`
+
+type SaveOutboxMessageParams struct {
+	Key         string `json:"key"`
+	Destination string `json:"destination"`
+	Data        []byte `json:"data"`
+}
+
+func (q *Queries) SaveOutboxMessage(ctx context.Context, arg SaveOutboxMessageParams) (int64, error) {
+	row := q.db.QueryRow(ctx, saveOutboxMessage, arg.Key, arg.Destination, arg.Data)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const setMessageFailed = `-- name: SetMessageFailed :exec
+update outbox set error_message = $1, retry_count = retry_count+1 where id=$2
+`
+
+type SetMessageFailedParams struct {
+	ErrorMessage pgtype.Text `json:"error_message"`
+	ID           int64       `json:"id"`
+}
+
+func (q *Queries) SetMessageFailed(ctx context.Context, arg SetMessageFailedParams) error {
+	_, err := q.db.Exec(ctx, setMessageFailed, arg.ErrorMessage, arg.ID)
+	return err
+}
+
+const setMessageSent = `-- name: SetMessageSent :exec
+update outbox set sent_at = now() where id=$1
+`
+
+func (q *Queries) SetMessageSent(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, setMessageSent, id)
+	return err
+}
+
+const unlockUnsentMessages = `-- name: UnlockUnsentMessages :exec
+update outbox set locked_by=null, locked_at = null where sent_at is null and locked_by=$1
+`
+
+func (q *Queries) UnlockUnsentMessages(ctx context.Context, lockedBy pgtype.Text) error {
+	_, err := q.db.Exec(ctx, unlockUnsentMessages, lockedBy)
+	return err
 }
 
 const updateOrderStatus = `-- name: UpdateOrderStatus :exec

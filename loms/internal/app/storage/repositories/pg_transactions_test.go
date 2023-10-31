@@ -2,9 +2,10 @@ package repositories
 
 import (
 	"context"
-	"sync"
 	"testing"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,8 +20,7 @@ type PgTransactionsTestSuite struct {
 	transactor *PgTransactor
 	stocksRepo *StocksPgRepository
 	ordersRepo *OrderPgRepository
-	cancel     context.CancelFunc
-	wg         *sync.WaitGroup
+	dbPool     *pgxpool.Pool
 }
 
 func TestPgTransactionsTestSuite(t *testing.T) {
@@ -28,25 +28,20 @@ func TestPgTransactionsTestSuite(t *testing.T) {
 }
 
 func (t *PgTransactionsTestSuite) SetupSuite() {
-	ctx, cancel := context.WithCancel(context.Background())
-	wg := &sync.WaitGroup{}
-
 	config := app.BuildConfig()
 
-	wg.Add(1)
-	dbPool, err := InitPostgresDbConnection(ctx, wg, config)
+	dbPool, err := InitPostgresDbConnection(config)
 	require.NoError(t.T(), err)
+
+	t.dbPool = dbPool
 
 	t.ordersRepo = NewOrderPgRepository(dbPool)
 	t.stocksRepo = NewStocksPgRepository(dbPool)
 	t.transactor = NewPgTransactor(dbPool)
-	t.cancel = cancel
-	t.wg = wg
 }
 
 func (t *PgTransactionsTestSuite) TearDownSuite() {
-	t.cancel()
-	t.wg.Wait()
+	t.dbPool.Close()
 }
 
 func (t *PgTransactionsTestSuite) TestTransactions() {

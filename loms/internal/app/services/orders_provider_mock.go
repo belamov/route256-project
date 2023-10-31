@@ -40,20 +40,6 @@ func (m *MockOrdersProvider) EXPECT() *MockOrdersProviderMockRecorder {
 	return m.recorder
 }
 
-// CancelUnpaidOrders mocks base method.
-func (m *MockOrdersProvider) CancelUnpaidOrders(arg0 context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CancelUnpaidOrders", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CancelUnpaidOrders indicates an expected call of CancelUnpaidOrders.
-func (mr *MockOrdersProviderMockRecorder) CancelUnpaidOrders(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelUnpaidOrders", reflect.TypeOf((*MockOrdersProvider)(nil).CancelUnpaidOrders), arg0)
-}
-
 // Create mocks base method.
 func (m *MockOrdersProvider) Create(arg0 context.Context, arg1 int64, arg2 models.OrderStatus, arg3 []models.OrderItem) (models.Order, error) {
 	m.ctrl.T.Helper()
@@ -69,6 +55,21 @@ func (mr *MockOrdersProviderMockRecorder) Create(arg0, arg1, arg2, arg3 any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockOrdersProvider)(nil).Create), arg0, arg1, arg2, arg3)
 }
 
+// GetExpiredOrdersWithStatus mocks base method.
+func (m *MockOrdersProvider) GetExpiredOrdersWithStatus(arg0 context.Context, arg1 time.Time, arg2 models.OrderStatus) ([]int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExpiredOrdersWithStatus", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetExpiredOrdersWithStatus indicates an expected call of GetExpiredOrdersWithStatus.
+func (mr *MockOrdersProviderMockRecorder) GetExpiredOrdersWithStatus(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExpiredOrdersWithStatus", reflect.TypeOf((*MockOrdersProvider)(nil).GetExpiredOrdersWithStatus), arg0, arg1, arg2)
+}
+
 // GetOrderByOrderId mocks base method.
 func (m *MockOrdersProvider) GetOrderByOrderId(arg0 context.Context, arg1 int64) (models.Order, error) {
 	m.ctrl.T.Helper()
@@ -82,21 +83,6 @@ func (m *MockOrdersProvider) GetOrderByOrderId(arg0 context.Context, arg1 int64)
 func (mr *MockOrdersProviderMockRecorder) GetOrderByOrderId(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderByOrderId", reflect.TypeOf((*MockOrdersProvider)(nil).GetOrderByOrderId), arg0, arg1)
-}
-
-// GetOrdersIdsByCreatedAtAndStatus mocks base method.
-func (m *MockOrdersProvider) GetExpiredOrdersWithStatus(arg0 context.Context, arg1 time.Time, arg2 models.OrderStatus) ([]int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetExpiredOrdersWithStatus", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetOrdersIdsByCreatedAtAndStatus indicates an expected call of GetOrdersIdsByCreatedAtAndStatus.
-func (mr *MockOrdersProviderMockRecorder) GetOrdersIdsByCreatedAtAndStatus(arg0, arg1, arg2 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExpiredOrdersWithStatus", reflect.TypeOf((*MockOrdersProvider)(nil).GetExpiredOrdersWithStatus), arg0, arg1, arg2)
 }
 
 // SetStatus mocks base method.
