@@ -1,26 +1,87 @@
+# run make up-kafka before
 version: "3.1"
 services:
-  cart:
-    image: cart
-    build:
-      context: .
-      dockerfile: ./cart/Dockerfile
 
-    ports:
-      - "8082:8080"
+  cart:
+    image: route256/cart
+    container_name: cart-app
+    build:
+      context: ./cart
+      dockerfile: ./docker/Dockerfile
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "postgresql://postgres:password@localhost:5433/cart"
+      CART_DB_HOST: "localhost:5433"
+      CART_LOG_LEVEL: 0
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+    command: '/cart'
     depends_on:
-      - loms
-    command: /cart
+      - cart-db
+      - redis
+    network_mode: "host"
 
   loms:
-    image: loms
-    build: ./loms/
-    ports:
-      - "8083:8080"
-    command: /loms
+    image: route256/loms
+    container_name: loms-app
+    build:
+      context: ./loms
+      dockerfile: ./docker/Dockerfile
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "postgresql://postgres:password@localhost:5432/loms"
+      LOMS_DB_HOST: "localhost:5432"
+      LOMS_LOG_LEVEL: 0
+      LOMS_HTTP_SERVER_ADDRESS: "0.0.0.0:9080"
+      LOMS_GRPC__SERVER_ADDRESS: "0.0.0.0:9083"
+      LOMS_GRPC_GATEWAY_SERVER_ADDRESS: "0.0.0.0:9084"
+    command: '/loms'
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+    network_mode: "host"
+    depends_on:
+      - loms-db
 
-  # notification:
-  #   image: notification
-  #   build: ./notification
-  #   ports:
-  #     - "8082:8082"
+  cart-db:
+    image: postgres
+    container_name: cart-postgres
+    environment:
+      POSTGRES_DB: cart
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgcartdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  loms-db:
+    image: postgres
+    container_name: loms-postgres
+    environment:
+      POSTGRES_DB: loms
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pglomsdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/root/redis
+    environment:
+      - REDIS_PORT=6379
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    ports:
+      - "14268:14268"
+      - "16686:16686"
+
+volumes:
+  pgcartdata:
+  pglomsdata:
+  redisdata:
