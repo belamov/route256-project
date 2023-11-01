@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/rs/zerolog"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -21,6 +22,7 @@ type Config struct {
 	OutboxId                   string        `default:"notifications-1" split_words:"true"`
 	OutboxSendInterval         time.Duration `default:"1m" split_words:"true"`
 	OutboxRetryInterval        time.Duration `default:"10m" split_words:"true"`
+	LogLevel                   zerolog.Level `default:"3" split_words:"true"`
 }
 
 func BuildConfig() *Config {
@@ -31,7 +33,7 @@ func BuildConfig() *Config {
 		log.Panic().Err(err).Msg("cant build config")
 	}
 
-	log.Info().Any("App config", config)
+	log.Debug().Any("App config", config).Msg("config")
 
 	return &config
 }

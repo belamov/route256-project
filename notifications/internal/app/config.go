@@ -1,16 +1,17 @@
 package app
 
 import (
-	"fmt"
+	"github.com/rs/zerolog"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
-	KafkaBrokers    []string `default:"localhost:9091,localhost:9092,localhost:9093" split_words:"true"`
-	TopicNames      []string `default:"order-status-changed" split_words:"true"`
-	ConsumerGroupId string   `default:"notifications" split_words:"true"`
+	KafkaBrokers    []string      `default:"localhost:9091,localhost:9092,localhost:9093" split_words:"true"`
+	TopicNames      []string      `default:"order-status-changed" split_words:"true"`
+	ConsumerGroupId string        `default:"notifications" split_words:"true"`
+	LogLevel        zerolog.Level `default:"3" split_words:"true"`
 }
 
 func BuildConfig() *Config {
@@ -21,18 +22,7 @@ func BuildConfig() *Config {
 		log.Panic().Err(err).Msg("cant build config")
 	}
 
-	log.Info().Msg("App config:\n" + config.String())
+	log.Debug().Any("App config", config).Msg("config")
 
 	return &config
-}
-
-func (config Config) String() string {
-	return fmt.Sprintf(
-		"KafkaBrokers: %v\n"+
-			"TopicNames: %v\n"+
-			"ConsumerGroupId: %v\n",
-		config.KafkaBrokers,
-		config.TopicNames,
-		config.ConsumerGroupId,
-	)
 }
