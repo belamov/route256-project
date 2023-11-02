@@ -137,6 +137,7 @@ func (o *Outbox) ProcessSuccessfullySentMessages(ctx context.Context, wg *sync.W
 	for {
 		select {
 		case message := <-o.producer.Successes():
+			log.Info().Any("msg", message).Msg("success message received")
 			err := o.repo.SetMessageSent(ctx, message)
 			if err != nil {
 				log.Error().Err(err).Msg("failed to set outbox message as sent")

@@ -2,7 +2,7 @@ package product
 
 import (
 	"context"
-	"errors"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"sync"
 
 	"route256/cart/internal/app/grpc/clients/product/pb"
@@ -31,6 +31,7 @@ func NewProductGrpcClient(
 		serviceUrl,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(interceptors.RateLimitClientInterceptor(limiter)),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 	)
 	if err != nil {
 		return nil, err
@@ -60,13 +61,8 @@ func NewProductGrpcClient(
 }
 
 func (p *productGrpcClient) GetProduct(ctx context.Context, sku uint32) (models.CartItemInfo, error) {
-	token, ok := ctx.Value("products_token").(string)
-	if !ok {
-		return models.CartItemInfo{}, errors.New("cant parse products_token from context")
-	}
-
 	request := &pb.GetProductRequest{
-		Token: token,
+		Token: "testtoken",
 		Sku:   sku,
 	}
 

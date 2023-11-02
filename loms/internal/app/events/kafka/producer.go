@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"route256/loms/internal/app/models"
@@ -119,6 +120,12 @@ func NewKafkaEventProducer(ctx context.Context, wg *sync.WaitGroup, brokers []st
 			}
 
 			log.Info().Msg(fmt.Sprintf("Async success with key %s", outboxMessage.Key))
+			orderId, err := strconv.ParseInt(outboxMessage.Key, 10, 64)
+			if err != nil {
+				log.Err(err).Msg("failed to decode message key")
+				continue
+			}
+			outboxMessage.Id = orderId
 			producer.successes <- outboxMessage
 		}
 		close(producer.successes)

@@ -18,11 +18,11 @@ import (
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Caller().Logger()
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	zerolog.SetGlobalLevel(0)
 
 	config := app.BuildConfig()
 
-	zerolog.SetGlobalLevel(config.LogLevel)
+	zerolog.SetGlobalLevel(0)
 
 	notifier := services.NewNotifier()
 

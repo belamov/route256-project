@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"route256/cart/internal/pkg/tracer"
 	"sync"
 	"syscall"
 
@@ -23,11 +24,17 @@ import (
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Caller().Logger()
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	zerolog.SetGlobalLevel(0)
 
 	config := app.BuildConfig()
 
 	zerolog.SetGlobalLevel(config.LogLevel)
+
+	_, err := tracer.InitTracer("http://localhost:14268/api/traces", "cart")
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed init tracer")
+		return
+	}
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	wg := &sync.WaitGroup{}

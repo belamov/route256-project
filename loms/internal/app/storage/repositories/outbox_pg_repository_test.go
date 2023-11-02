@@ -30,7 +30,7 @@ func TestOutboxPgRepositoryTestSuite(t *testing.T) {
 func (t *OutboxPgRepositoryTestSuite) SetupSuite() {
 	config := app.BuildConfig()
 
-	dbPool, err := InitPostgresDbConnection(config)
+	dbPool, err := InitPostgresDbConnection(context.Background(), config)
 	require.NoError(t.T(), err)
 
 	repo := NewOutboxPgRepository(dbPool)

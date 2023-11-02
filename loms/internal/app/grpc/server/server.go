@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"net"
 	"net/http"
 	"sync"
@@ -39,6 +40,7 @@ func NewGRPCServer(
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcrecovery.UnaryServerInterceptor(),
 		)),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 	return &GrpcServer{
 		server:               s,

@@ -71,6 +71,7 @@ func (c *cart) AddItem(ctx context.Context, item models.CartItem) error {
 
 	_, err := c.productService.GetProduct(ctx, item.Sku)
 	if err != nil {
+		log.Err(err).Msg("get product error")
 		return ErrSkuInvalid
 	}
 

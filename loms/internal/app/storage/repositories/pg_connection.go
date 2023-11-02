@@ -3,13 +3,14 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"github.com/exaring/otelpgx"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 	"route256/loms/internal/app"
 )
 
-func InitPostgresDbConnection(config *app.Config) (*pgxpool.Pool, error) {
+func InitPostgresDbConnection(ctx context.Context, config *app.Config) (*pgxpool.Pool, error) {
 	databaseDSN := fmt.Sprintf(
 		"postgresql://%s:%s@%s/%s",
 		config.DbUser,
@@ -17,9 +18,16 @@ func InitPostgresDbConnection(config *app.Config) (*pgxpool.Pool, error) {
 		config.DbHost,
 		config.DbName,
 	)
-	dbPool, err := pgxpool.New(context.Background(), databaseDSN)
+	cfg, err := pgxpool.ParseConfig(databaseDSN)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse config: %w", err)
+	}
+
+	cfg.ConnConfig.Tracer = otelpgx.NewTracer()
+
+	dbPool, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("create connection pool: %w", err)
 	}
 	log.Info().Msg("Connected to postgres")
 

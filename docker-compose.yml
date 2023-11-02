@@ -13,6 +13,8 @@ services:
       GOOSE_DBSTRING: "postgresql://postgres:password@localhost:5433/cart"
       CART_DB_HOST: "localhost:5433"
       CART_LOG_LEVEL: 0
+      CART_REDIS_ADDRESS: "localhost:6379"
+      CART_LOMS_GRPC_SERVICE_URL: "localhost:9083"
     stop_signal: SIGINT
     stop_grace_period: 30s
     command: '/cart'
@@ -33,9 +35,24 @@ services:
       LOMS_DB_HOST: "localhost:5432"
       LOMS_LOG_LEVEL: 0
       LOMS_HTTP_SERVER_ADDRESS: "0.0.0.0:9080"
-      LOMS_GRPC__SERVER_ADDRESS: "0.0.0.0:9083"
+      LOMS_GRPC_SERVER_ADDRESS: "0.0.0.0:9083"
       LOMS_GRPC_GATEWAY_SERVER_ADDRESS: "0.0.0.0:9084"
     command: '/loms'
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+    network_mode: "host"
+    depends_on:
+      - loms-db
+
+  notifications:
+    image: route256/notifications
+    container_name: notifications-app
+    build:
+      context: ./notifications
+      dockerfile: ./Dockerfile
+    command: '/notifications'
+    environment:
+      NOTIFICATIONS_LOG_LEVEL: 0
     stop_signal: SIGINT
     stop_grace_period: 30s
     network_mode: "host"
