@@ -3,8 +3,9 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"github.com/exaring/otelpgx"
 	"sync"
+
+	"github.com/exaring/otelpgx"
 
 	"route256/cart/internal/app"
 

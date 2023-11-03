@@ -1,8 +1,9 @@
 package app
 
 import (
-	"github.com/rs/zerolog"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"

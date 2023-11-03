@@ -97,6 +97,9 @@ services:
     ports:
       - "14268:14268"
       - "16686:16686"
+      - "4318:4318"
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
 
 volumes:
   pgcartdata:

@@ -2,9 +2,10 @@ package loms
 
 import (
 	"context"
+	"sync"
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"route256/cart/internal/app/grpc/clients/loms/pb"
-	"sync"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"

@@ -20,7 +20,7 @@ type Producer struct {
 }
 
 func (p *Producer) ProduceMessage(ctx context.Context, message models.OutboxMessage) error {
-	msg, err := p.BuildMessage(message.Destination, message.Key, message.Data)
+	msg, err := p.BuildMessage(message.Destination, strconv.FormatInt(message.Id, 10), message.Data)
 	if err != nil {
 		return fmt.Errorf("failed to build kafka message: %w", err)
 	}
@@ -120,12 +120,12 @@ func NewKafkaEventProducer(ctx context.Context, wg *sync.WaitGroup, brokers []st
 			}
 
 			log.Info().Msg(fmt.Sprintf("Async success with key %s", outboxMessage.Key))
-			orderId, err := strconv.ParseInt(outboxMessage.Key, 10, 64)
+			messageId, err := strconv.ParseInt(outboxMessage.Key, 10, 64)
 			if err != nil {
 				log.Err(err).Msg("failed to decode message key")
 				continue
 			}
-			outboxMessage.Id = orderId
+			outboxMessage.Id = messageId
 			producer.successes <- outboxMessage
 		}
 		close(producer.successes)

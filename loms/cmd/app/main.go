@@ -4,10 +4,11 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"route256/loms/internal/pkg/tracer"
 	"sync"
 	"syscall"
 	"time"
+
+	"route256/loms/internal/pkg/tracer"
 
 	"github.com/IBM/sarama"
 
@@ -30,14 +31,15 @@ func main() {
 
 	zerolog.SetGlobalLevel(config.LogLevel)
 
-	_, err := tracer.InitTracer("http://localhost:14268/api/traces", "loms")
+	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	wg := &sync.WaitGroup{}
+
+	wg.Add(1)
+	_, err := tracer.InitTracer(ctx, wg, "localhost:4318", "", "loms")
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed init tracer")
 		return
 	}
-
-	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	wg := &sync.WaitGroup{}
 
 	dbPool, err := repositories.InitPostgresDbConnection(ctx, config)
 	if err != nil {

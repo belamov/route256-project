@@ -4,9 +4,10 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"route256/cart/internal/pkg/tracer"
 	"sync"
 	"syscall"
+
+	"route256/cart/internal/pkg/tracer"
 
 	"route256/cart/internal/app"
 	"route256/cart/internal/app/grpc/clients/loms"
@@ -30,14 +31,15 @@ func main() {
 
 	zerolog.SetGlobalLevel(config.LogLevel)
 
-	_, err := tracer.InitTracer("http://localhost:14268/api/traces", "cart")
+	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	wg := &sync.WaitGroup{}
+
+	wg.Add(1)
+	_, err := tracer.InitTracer(ctx, wg, "localhost:4318", "", "cart")
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed init tracer")
 		return
 	}
-
-	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
 	lomsService, err := loms.NewLomsGrpcClient(ctx, wg, config.LomsGrpcServiceUrl)

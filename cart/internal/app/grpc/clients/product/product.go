@@ -2,8 +2,9 @@ package product
 
 import (
 	"context"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"sync"
+
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 
 	"route256/cart/internal/app/grpc/clients/product/pb"
 	"route256/cart/internal/app/grpc/interceptors"
