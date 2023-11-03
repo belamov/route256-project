@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"route256/cart/internal/pkg/metrics"
+
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -59,7 +61,7 @@ func (s *CartGrpcServerTestSuite) SetupTest() {
 
 	mockService := services.NewMockCart(ctrl)
 
-	appServer := NewGRPCServer("", "", mockService)
+	appServer := NewGRPCServer("", "", mockService, metrics.InitMetrics())
 
 	pb.RegisterCartServer(grpcServer, appServer)
 
@@ -110,7 +112,7 @@ func (s *CartGrpcServerTestSuite) TestRunServer() {
 	address := fmt.Sprintf("0.0.0.0:%d", chooseRandomUnusedPort())
 	gatewayPort := chooseRandomUnusedPort()
 	gatewayAddress := fmt.Sprintf("0.0.0.0:%d", gatewayPort)
-	server := NewGRPCServer(address, gatewayAddress, s.mockService)
+	server := NewGRPCServer(address, gatewayAddress, s.mockService, metrics.InitMetrics())
 
 	wg.Add(2)
 	go server.Run(ctx, wg)

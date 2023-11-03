@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"sync"
 
+	"route256/loms/internal/pkg/metrics"
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -33,13 +35,15 @@ func NewGRPCServer(
 	serverAddress string,
 	gatewayServerAddress string,
 	service services.Loms,
+	metrics *metrics.Metrics,
 ) *GrpcServer {
 	s := grpc.NewServer(
 		grpc.StreamInterceptor(grpcmiddleware.ChainStreamServer(
 			grpcrecovery.StreamServerInterceptor(),
 		)),
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
-			grpcrecovery.UnaryServerInterceptor(),
+			grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(metrics.PanicHandler)),
+			metrics.SrvMetrics.UnaryServerInterceptor(),
 		)),
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)

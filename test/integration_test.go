@@ -26,42 +26,45 @@ func TestCart(t *testing.T) {
 	cartClient, err := NewCartGrpcClient(ctx, wg, "localhost:8083")
 	require.NoError(t, err)
 
-	userId := rand.Int63()
-	var sku uint32 = 1148162
-	addItemRequest := &pb.AddItemRequest{
-		User: userId,
-		Item: &pb.CartItemAddRequest{
-			User:  userId,
-			Sku:   sku,
-			Count: 1,
-		},
+	for {
+
+		userId := rand.Int63()
+		var sku uint32 = 1148162
+		addItemRequest := &pb.AddItemRequest{
+			User: userId,
+			Item: &pb.CartItemAddRequest{
+				User:  userId,
+				Sku:   sku,
+				Count: 1,
+			},
+		}
+		_, err = cartClient.AddItem(ctx, addItemRequest)
+		assert.NoError(t, err)
+
+		response, err := cartClient.List(ctx, &pb.ListRequest{User: userId})
+		assert.NoError(t, err)
+		assert.Len(t, response.Items, 1)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, uint64(1), response.Items[0].Count)
+
+		_, err = cartClient.DeleteItem(ctx, &pb.DeleteItemRequest{
+			User: userId,
+			Sku:  sku,
+		})
+		assert.NoError(t, err)
+
+		response, err = cartClient.List(ctx, &pb.ListRequest{User: userId})
+		assert.NoError(t, err)
+		assert.Len(t, response.Items, 0)
+
+		_, err = cartClient.AddItem(ctx, addItemRequest)
+		assert.NoError(t, err)
+
+		checkoutResponse, err := cartClient.Checkout(ctx, &pb.CheckoutRequest{User: userId})
+		assert.NoError(t, err)
+		assert.Greater(t, checkoutResponse.OrderID, int64(0))
 	}
-	_, err = cartClient.AddItem(ctx, addItemRequest)
-	assert.NoError(t, err)
-
-	response, err := cartClient.List(ctx, &pb.ListRequest{User: userId})
-	assert.NoError(t, err)
-	assert.Len(t, response.Items, 1)
-	assert.Equal(t, sku, response.Items[0].Sku)
-	assert.Equal(t, sku, response.Items[0].Sku)
-	assert.Equal(t, uint64(1), response.Items[0].Count)
-
-	_, err = cartClient.DeleteItem(ctx, &pb.DeleteItemRequest{
-		User: userId,
-		Sku:  sku,
-	})
-	assert.NoError(t, err)
-
-	response, err = cartClient.List(ctx, &pb.ListRequest{User: userId})
-	assert.NoError(t, err)
-	assert.Len(t, response.Items, 0)
-
-	_, err = cartClient.AddItem(ctx, addItemRequest)
-	assert.NoError(t, err)
-
-	checkoutResponse, err := cartClient.Checkout(ctx, &pb.CheckoutRequest{User: userId})
-	assert.NoError(t, err)
-	assert.Greater(t, checkoutResponse.OrderID, int64(0))
 
 	cancel()
 	wg.Wait()

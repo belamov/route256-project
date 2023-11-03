@@ -18,7 +18,7 @@ import (
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Caller().Logger()
-	zerolog.SetGlobalLevel(0)
+	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 
 	config := app.BuildConfig()
 

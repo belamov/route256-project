@@ -22,6 +22,7 @@ type Config struct {
 	DbName                    string        `default:"cart" split_words:"true"`
 	RedisAddress              string        `default:"redis:6379" split_words:"true"`
 	LogLevel                  zerolog.Level `default:"3" split_words:"true"`
+	MetricsServerAddress      string        `default:"0.0.0.0:8081" split_words:"true"`
 }
 
 func BuildConfig() *Config {

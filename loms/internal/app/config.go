@@ -24,6 +24,7 @@ type Config struct {
 	OutboxSendInterval         time.Duration `default:"1m" split_words:"true"`
 	OutboxRetryInterval        time.Duration `default:"10m" split_words:"true"`
 	LogLevel                   zerolog.Level `default:"3" split_words:"true"`
+	MetricsServerAddress       string        `default:"0.0.0.0:9081" split_words:"true"`
 }
 
 func BuildConfig() *Config {

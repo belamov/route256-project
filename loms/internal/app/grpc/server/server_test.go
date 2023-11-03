@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"route256/loms/internal/pkg/metrics"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -58,7 +60,7 @@ func (s *LomsGrpcServerTestSuite) SetupTest() {
 
 	mockService := services.NewMockLoms(ctrl)
 
-	appServer := NewGRPCServer("", "", mockService)
+	appServer := NewGRPCServer("", "", mockService, metrics.InitMetrics())
 
 	pb.RegisterLomsServer(grpcServer, appServer)
 
@@ -109,7 +111,7 @@ func (s *LomsGrpcServerTestSuite) TestRunServer() {
 	address := fmt.Sprintf("0.0.0.0:%d", chooseRandomUnusedPort())
 	gatewayPort := chooseRandomUnusedPort()
 	gatewayAddress := fmt.Sprintf("0.0.0.0:%d", gatewayPort)
-	server := NewGRPCServer(address, gatewayAddress, s.mockService)
+	server := NewGRPCServer(address, gatewayAddress, s.mockService, metrics.InitMetrics())
 
 	wg.Add(2)
 	go server.Run(ctx, wg)

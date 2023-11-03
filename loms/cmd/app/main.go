@@ -8,6 +8,8 @@ import (
 	"syscall"
 	"time"
 
+	"route256/loms/internal/pkg/metrics"
+
 	"route256/loms/internal/pkg/tracer"
 
 	"github.com/IBM/sarama"
@@ -33,6 +35,11 @@ func main() {
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	wg := &sync.WaitGroup{}
+
+	m := metrics.InitMetrics()
+	wg.Add(1)
+	go m.RunServer(ctx, wg, "0.0.0.0:9081")
+	go m.RunServer(ctx, wg, config.MetricsServerAddress)
 
 	wg.Add(1)
 	_, err := tracer.InitTracer(ctx, wg, "localhost:4318", "", "loms")
@@ -81,7 +88,7 @@ func main() {
 	)
 
 	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, lomsService)
-	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, config.GrpcGatewayServerAddress, lomsService)
+	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, config.GrpcGatewayServerAddress, lomsService, m)
 
 	wg.Add(4)
 
