@@ -35,7 +35,7 @@ func main() {
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
-	_, err := tracer.InitTracer(ctx, wg, "localhost:4318", "", "cart")
+	tracer, err := tracer.InitTracer(ctx, wg, "localhost:4318", "", "cart")
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed init tracer")
 		return
@@ -67,7 +67,7 @@ func main() {
 
 	cartProvider := repositories.NewCartRepository(dbPool)
 
-	cartService := services.NewCartService(productService, lomsService, cartProvider)
+	cartService := services.NewCartService(productService, lomsService, cartProvider, tracer)
 
 	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, handlers.NewRouter(cartService))
 	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, config.GrpcGatewayServerAddress, cartService)
