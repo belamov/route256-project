@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sync"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"route256/cart/internal/app/models"
 
 	"github.com/rs/zerolog/log"
@@ -46,17 +48,20 @@ type cart struct {
 	productService ProductService
 	lomsService    LomsService
 	cartProvider   CartProvider
+	tracer         trace.Tracer
 }
 
 func NewCartService(
 	productService ProductService,
 	lomsService LomsService,
 	cartProvider CartProvider,
+	tracer trace.Tracer,
 ) Cart {
 	return &cart{
 		productService: productService,
 		lomsService:    lomsService,
 		cartProvider:   cartProvider,
+		tracer:         tracer,
 	}
 }
 
@@ -71,6 +76,7 @@ func (c *cart) AddItem(ctx context.Context, item models.CartItem) error {
 
 	_, err := c.productService.GetProduct(ctx, item.Sku)
 	if err != nil {
+		log.Err(err).Msg("get product error")
 		return ErrSkuInvalid
 	}
 
@@ -189,11 +195,16 @@ func (c *cart) getProductsFullInfo(ctx context.Context, items []models.CartItem)
 }
 
 func (c *cart) Checkout(ctx context.Context, userId int64) (int64, error) {
+	ctx, span := c.tracer.Start(ctx, "checkout start", trace.WithSpanKind(trace.SpanKindInternal))
+	defer span.End()
+
 	if userId == 0 {
 		return 0, errors.New("user id is required")
 	}
 
+	_, getItemsSpan := c.tracer.Start(ctx, "get items", trace.WithSpanKind(trace.SpanKindInternal))
 	items, err := c.cartProvider.GetItemsByUserId(ctx, userId)
+	getItemsSpan.End()
 	if err != nil {
 		return 0, fmt.Errorf("error fetching users cart: %w", err)
 	}
@@ -201,12 +212,16 @@ func (c *cart) Checkout(ctx context.Context, userId int64) (int64, error) {
 		return 0, ErrCartIsEmpty
 	}
 
+	_, createOrderSpan := c.tracer.Start(ctx, "create order", trace.WithSpanKind(trace.SpanKindInternal))
 	orderId, err := c.lomsService.CreateOrder(ctx, userId, items)
+	createOrderSpan.End()
 	if err != nil {
 		return 0, fmt.Errorf("error creating order: %w", err)
 	}
 
+	_, deleteItemsSpan := c.tracer.Start(ctx, "delete items", trace.WithSpanKind(trace.SpanKindInternal))
 	err = c.DeleteItemsByUserId(ctx, userId)
+	deleteItemsSpan.End()
 	if err != nil {
 		return 0, fmt.Errorf("error clearing cart after order creating: %w", err)
 	}

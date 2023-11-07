@@ -1,26 +1,136 @@
+# run make up-kafka before
 version: "3.1"
 services:
-  cart:
-    image: cart
-    build:
-      context: .
-      dockerfile: ./cart/Dockerfile
 
-    ports:
-      - "8082:8080"
+  cart:
+    image: route256/cart
+    container_name: cart-app
+    build:
+      context: ./cart
+      dockerfile: ./docker/Dockerfile
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "postgresql://postgres:password@localhost:5433/cart"
+      CART_DB_HOST: "localhost:5433"
+      CART_LOG_LEVEL: 0
+      CART_REDIS_ADDRESS: "localhost:6379"
+      CART_LOMS_GRPC_SERVICE_URL: "localhost:9083"
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+    command: '/cart'
     depends_on:
-      - loms
-    command: /cart
+      - cart-db
+      - redis
+    network_mode: "host"
 
   loms:
-    image: loms
-    build: ./loms/
-    ports:
-      - "8083:8080"
-    command: /loms
+    image: route256/loms
+    container_name: loms-app
+    build:
+      context: ./loms
+      dockerfile: ./docker/Dockerfile
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "postgresql://postgres:password@localhost:5432/loms"
+      LOMS_DB_HOST: "localhost:5432"
+      LOMS_LOG_LEVEL: 0
+      LOMS_HTTP_SERVER_ADDRESS: "0.0.0.0:9080"
+      LOMS_GRPC_SERVER_ADDRESS: "0.0.0.0:9083"
+      LOMS_GRPC_GATEWAY_SERVER_ADDRESS: "0.0.0.0:9084"
+    command: '/loms'
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+    network_mode: "host"
+    depends_on:
+      - loms-db
 
-  # notification:
-  #   image: notification
-  #   build: ./notification
-  #   ports:
-  #     - "8082:8082"
+  notifications:
+    image: route256/notifications
+    container_name: notifications-app
+    build:
+      context: ./notifications
+      dockerfile: ./Dockerfile
+    command: '/notifications'
+    environment:
+      NOTIFICATIONS_LOG_LEVEL: 0
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+    network_mode: "host"
+    depends_on:
+      - loms-db
+
+  cart-db:
+    image: postgres
+    container_name: cart-postgres
+    environment:
+      POSTGRES_DB: cart
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgcartdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  loms-db:
+    image: postgres
+    container_name: loms-postgres
+    environment:
+      POSTGRES_DB: loms
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pglomsdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/root/redis
+    environment:
+      - REDIS_PORT=6379
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    ports:
+      - "14268:14268"
+      - "16686:16686"
+      - "4318:4318"
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheusdata:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    network_mode: "host"
+
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    network_mode: "host"
+
+volumes:
+  pgcartdata:
+  pglomsdata:
+  redisdata:
+  prometheusdata:
+  grafana-storage:

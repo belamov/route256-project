@@ -28,7 +28,7 @@ func TestProducer_OrderStatusChangedEventEmit(t *testing.T) {
 	producer, err := NewKafkaEventProducer(ctx, wg, brokers)
 	require.NoError(t, err)
 
-	pgPool, err := repositories.InitPostgresDbConnection(config)
+	pgPool, err := repositories.InitPostgresDbConnection(ctx, config)
 	require.NoError(t, err)
 
 	outboxRepo := repositories.NewOutboxPgRepository(pgPool)

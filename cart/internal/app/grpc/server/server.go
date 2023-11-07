@@ -7,6 +7,10 @@ import (
 	"net/http"
 	"sync"
 
+	"route256/cart/internal/pkg/metrics"
+
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -31,14 +35,17 @@ func NewGRPCServer(
 	serverAddress string,
 	gatewayServerAddress string,
 	service services.Cart,
+	metrics *metrics.Metrics,
 ) *GrpcServer {
 	s := grpc.NewServer(
 		grpc.StreamInterceptor(grpcmiddleware.ChainStreamServer(
 			grpcrecovery.StreamServerInterceptor(),
 		)),
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
-			grpcrecovery.UnaryServerInterceptor(),
+			grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(metrics.PanicHandler)),
+			metrics.SrvMetrics.UnaryServerInterceptor(),
 		)),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 	return &GrpcServer{
 		server:               s,
@@ -61,7 +68,7 @@ func (s *GrpcServer) Run(ctx context.Context, wg *sync.WaitGroup) {
 
 	listen, err := net.Listen("tcp", s.ServerAddress)
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("listen error")
 		return
 	}
 

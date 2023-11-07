@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"route256/cart/internal/app/models"
 
 	"github.com/stretchr/testify/assert"
@@ -47,7 +49,8 @@ func (ts *CartTestSuite) SetupSuite() {
 	ts.mockCartProvider = NewMockCartProvider(ts.mockCtrl)
 	ts.mockLomsService = NewMockLomsService(ts.mockCtrl)
 	ts.mockProductService = NewMockProductService(ts.mockCtrl)
-	ts.cart = NewCartService(ts.mockProductService, ts.mockLomsService, ts.mockCartProvider)
+	tracer := trace.NewNoopTracerProvider().Tracer("mock")
+	ts.cart = NewCartService(ts.mockProductService, ts.mockLomsService, ts.mockCartProvider, tracer)
 }
 
 func TestCartTestSuite(t *testing.T) {
@@ -230,11 +233,11 @@ func (ts *CartTestSuite) TestCheckout() {
 			Count: 3,
 		},
 	}
-	ts.mockCartProvider.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
-	ts.mockCartProvider.EXPECT().DeleteItemsByUserId(ctx, userId).Return(nil)
+	ts.mockCartProvider.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartItems, nil)
+	ts.mockCartProvider.EXPECT().DeleteItemsByUserId(gomock.Any(), userId).Return(nil)
 	orderId := int64(1000)
 	ts.mockLomsService.EXPECT().
-		CreateOrder(ctx, userId, gomock.Any()).
+		CreateOrder(gomock.Any(), userId, gomock.Any()).
 		Return(orderId, nil)
 
 	returnedOrderId, err := ts.cart.Checkout(ctx, userId)
@@ -246,7 +249,7 @@ func (ts *CartTestSuite) TestCheckoutEmptyCart() {
 	ctx := context.Background()
 	var userId int64 = 1
 	var cartItems []models.CartItem
-	ts.mockCartProvider.EXPECT().GetItemsByUserId(ctx, userId).Return(cartItems, nil)
+	ts.mockCartProvider.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartItems, nil)
 
 	returnedOrderId, err := ts.cart.Checkout(ctx, userId)
 	assert.ErrorIs(ts.T(), err, ErrCartIsEmpty)
@@ -299,7 +302,7 @@ func BenchmarkCart_GetItemsByUserId(b *testing.B) {
 	var userId int64 = 50
 
 	// чтобы не делать настоящих запросов, замокаем продукт сервис с обычным слипом в 10мс, как будто бы мы получаем ответ за 10мс
-	service := NewCartService(mockProductService{}, mockLomsService, mockCartStorage)
+	service := NewCartService(mockProductService{}, mockLomsService, mockCartStorage, nil)
 
 	cartWith1item := make([]models.CartItem, 1)
 	for j := 0; j < len(cartWith1item); j++ {

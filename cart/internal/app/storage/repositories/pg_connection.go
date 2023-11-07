@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/exaring/otelpgx"
+
 	"route256/cart/internal/app"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,9 +21,16 @@ func InitPostgresDbConnection(ctx context.Context, wg *sync.WaitGroup, config *a
 		config.DbHost,
 		config.DbName,
 	)
-	dbPool, err := pgxpool.New(ctx, databaseDSN)
+	cfg, err := pgxpool.ParseConfig(databaseDSN)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse config: %w", err)
+	}
+
+	cfg.ConnConfig.Tracer = otelpgx.NewTracer()
+
+	dbPool, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("create connection pool: %w", err)
 	}
 	log.Info().Msg("Connected to postgres")
 

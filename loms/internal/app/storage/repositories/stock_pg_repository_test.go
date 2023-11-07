@@ -31,7 +31,7 @@ func TestStockPgRepositoryTestSuite(t *testing.T) {
 func (t *StockPgRepositoryTestSuite) SetupSuite() {
 	config := app.BuildConfig()
 
-	dbPool, err := InitPostgresDbConnection(config)
+	dbPool, err := InitPostgresDbConnection(context.Background(), config)
 	require.NoError(t.T(), err)
 
 	t.dbPool = dbPool

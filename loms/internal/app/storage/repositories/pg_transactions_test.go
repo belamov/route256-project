@@ -30,7 +30,7 @@ func TestPgTransactionsTestSuite(t *testing.T) {
 func (t *PgTransactionsTestSuite) SetupSuite() {
 	config := app.BuildConfig()
 
-	dbPool, err := InitPostgresDbConnection(config)
+	dbPool, err := InitPostgresDbConnection(context.Background(), config)
 	require.NoError(t.T(), err)
 
 	t.dbPool = dbPool

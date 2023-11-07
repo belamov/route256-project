@@ -1,11 +1,6 @@
 docker_compose_bin := docker compose
 
-build-all:
-	cd cart && make build
-	cd loms && make build
-	cd notifications && make build
-
-run-all: build-all
+run-all:
 	$(docker_compose_bin) up --build
 
 check:
@@ -15,3 +10,7 @@ check:
 
 up-kafka:
 	$(docker_compose_bin) -f docker-compose-kafka.yml up
+
+migrate:
+	$(docker_compose_bin) exec cart goose -dir internal/app/storage/migrations up
+	$(docker_compose_bin) exec loms goose -dir internal/app/storage/migrations up

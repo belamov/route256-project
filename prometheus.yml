@@ -1,0 +1,11 @@
+scrape_configs:
+  - job_name: cart
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - localhost:8081
+  - job_name: loms
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - localhost:9081

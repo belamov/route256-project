@@ -8,6 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	"route256/loms/internal/pkg/metrics"
+
+	"route256/loms/internal/pkg/tracer"
+
 	"github.com/IBM/sarama"
 
 	"route256/loms/internal/app"
@@ -22,14 +26,29 @@ import (
 )
 
 func main() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Caller().Logger()
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Caller().Logger()
+	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 
 	config := app.BuildConfig()
+
+	zerolog.SetGlobalLevel(config.LogLevel)
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	wg := &sync.WaitGroup{}
 
-	dbPool, err := repositories.InitPostgresDbConnection(config)
+	m := metrics.InitMetrics()
+	wg.Add(1)
+	go m.RunServer(ctx, wg, "0.0.0.0:9081")
+	go m.RunServer(ctx, wg, config.MetricsServerAddress)
+
+	wg.Add(1)
+	_, err := tracer.InitTracer(ctx, wg, "localhost:4318", "", "loms")
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed init tracer")
+		return
+	}
+
+	dbPool, err := repositories.InitPostgresDbConnection(ctx, config)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot initialize connection to postgres")
 		return
@@ -69,7 +88,7 @@ func main() {
 	)
 
 	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, lomsService)
-	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, config.GrpcGatewayServerAddress, lomsService)
+	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, config.GrpcGatewayServerAddress, lomsService, m)
 
 	wg.Add(4)
 

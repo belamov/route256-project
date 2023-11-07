@@ -30,7 +30,7 @@ func TestOrderPgRepositoryTestSuite(t *testing.T) {
 func (t *OrderPgRepositoryTestSuite) SetupSuite() {
 	config := app.BuildConfig()
 
-	dbPool, err := InitPostgresDbConnection(config)
+	dbPool, err := InitPostgresDbConnection(context.Background(), config)
 	require.NoError(t.T(), err)
 
 	repo := NewOrderPgRepository(dbPool)

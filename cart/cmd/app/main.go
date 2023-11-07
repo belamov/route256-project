@@ -7,6 +7,10 @@ import (
 	"sync"
 	"syscall"
 
+	"route256/cart/internal/pkg/metrics"
+
+	"route256/cart/internal/pkg/tracer"
+
 	"route256/cart/internal/app"
 	"route256/cart/internal/app/grpc/clients/loms"
 	"route256/cart/internal/app/grpc/clients/product"
@@ -22,12 +26,26 @@ import (
 )
 
 func main() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Caller().Logger()
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Caller().Logger()
+	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 
 	config := app.BuildConfig()
 
+	zerolog.SetGlobalLevel(config.LogLevel)
+
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	wg := &sync.WaitGroup{}
+
+	wg.Add(1)
+	t, err := tracer.InitTracer(ctx, wg, "localhost:4318", "", "cart")
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed init tracer")
+		return
+	}
+
+	m := metrics.InitMetrics()
+	wg.Add(1)
+	go m.RunServer(ctx, wg, config.MetricsServerAddress)
 
 	wg.Add(1)
 	lomsService, err := loms.NewLomsGrpcClient(ctx, wg, config.LomsGrpcServiceUrl)
@@ -55,10 +73,10 @@ func main() {
 
 	cartProvider := repositories.NewCartRepository(dbPool)
 
-	cartService := services.NewCartService(productService, lomsService, cartProvider)
+	cartService := services.NewCartService(productService, lomsService, cartProvider, t)
 
 	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, handlers.NewRouter(cartService))
-	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, config.GrpcGatewayServerAddress, cartService)
+	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, config.GrpcGatewayServerAddress, cartService, m)
 
 	wg.Add(3)
 

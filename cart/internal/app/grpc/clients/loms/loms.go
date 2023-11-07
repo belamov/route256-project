@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"route256/cart/internal/app/grpc/clients/loms/pb"
 
 	"github.com/rs/zerolog/log"
@@ -24,6 +25,7 @@ func NewLomsGrpcClient(ctx context.Context, wg *sync.WaitGroup, serviceUrl strin
 		ctx,
 		serviceUrl,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 	)
 	if err != nil {
 		return nil, err
