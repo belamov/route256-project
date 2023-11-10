@@ -101,6 +101,28 @@ services:
     environment:
       COLLECTOR_OTLP_ENABLED: true
 
+  cart-redis-shard-1:
+    image: redis:latest
+    ports:
+      - "6380:6380"
+    expose:
+      - "6380"
+    volumes:
+      - redisdata-shard-1:/root/redis
+    network_mode: host
+    command: --port 6380
+
+  cart-redis-shard-2:
+    image: redis:latest
+    ports:
+      - "6381:6381"
+    expose:
+      - "6381"
+    volumes:
+      - redisdata-shard-2:/root/redis
+    network_mode: host
+    command: --port 6381
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -134,3 +156,5 @@ volumes:
   redisdata:
   prometheusdata:
   grafana-storage:
+  redisdata-shard-1:
+  redisdata-shard-2:

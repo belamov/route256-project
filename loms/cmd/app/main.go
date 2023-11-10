@@ -38,7 +38,6 @@ func main() {
 
 	m := metrics.InitMetrics()
 	wg.Add(1)
-	go m.RunServer(ctx, wg, "0.0.0.0:9081")
 	go m.RunServer(ctx, wg, config.MetricsServerAddress)
 
 	wg.Add(1)

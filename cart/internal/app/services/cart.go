@@ -44,10 +44,17 @@ type CartProvider interface {
 	DeleteItemsByUserId(ctx context.Context, userId int64) error
 }
 
+type CartCache interface {
+	GetCartItems(ctx context.Context, userId int64) ([]models.CartItemWithInfo, error)
+	SetCartItems(ctx context.Context, userId int64, items []models.CartItemWithInfo) error
+	Invalidate(ctx context.Context, userId int64) error
+}
+
 type cart struct {
 	productService ProductService
 	lomsService    LomsService
 	cartProvider   CartProvider
+	cache          CartCache
 	tracer         trace.Tracer
 }
 
@@ -55,12 +62,14 @@ func NewCartService(
 	productService ProductService,
 	lomsService LomsService,
 	cartProvider CartProvider,
+	cache CartCache,
 	tracer trace.Tracer,
 ) Cart {
 	return &cart{
 		productService: productService,
 		lomsService:    lomsService,
 		cartProvider:   cartProvider,
+		cache:          cache,
 		tracer:         tracer,
 	}
 }
@@ -94,6 +103,11 @@ func (c *cart) AddItem(ctx context.Context, item models.CartItem) error {
 		return fmt.Errorf("error adding item to cart: %w", err)
 	}
 
+	err = c.cache.Invalidate(ctx, item.User)
+	if err != nil {
+		log.Error().Err(err).Int64("user", item.User).Msg("cannot invalidate cache of user cart")
+	}
+
 	return nil
 }
 
@@ -107,6 +121,11 @@ func (c *cart) DeleteItem(ctx context.Context, item models.CartItem) error {
 		return fmt.Errorf("error deleting item from cart: %w", err)
 	}
 
+	err = c.cache.Invalidate(ctx, item.User)
+	if err != nil {
+		log.Error().Err(err).Int64("user", item.User).Msg("cannot invalidate cache of user cart")
+	}
+
 	return nil
 }
 
@@ -115,23 +134,35 @@ func (c *cart) GetItemsByUserId(ctx context.Context, userId int64) ([]models.Car
 		return nil, 0, errors.New("user id is required")
 	}
 
+	itemsFromCache, err := c.cache.GetCartItems(ctx, userId)
+	if err == nil && itemsFromCache != nil {
+		return itemsFromCache, c.getTotalPriceOfItems(itemsFromCache), nil
+	}
+
 	items, err := c.cartProvider.GetItemsByUserId(ctx, userId)
 	if err != nil {
 		return nil, 0, fmt.Errorf("error fetching users cart: %w", err)
 	}
-
-	var totalPrice uint32 = 0
 
 	itemsWithInfo, err := c.getProductsFullInfo(ctx, items)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	err = c.cache.SetCartItems(ctx, userId, itemsWithInfo)
+	if err != nil {
+		log.Error().Err(err).Msg("error caching cart items")
+	}
+
+	return itemsWithInfo, c.getTotalPriceOfItems(itemsWithInfo), nil
+}
+
+func (c *cart) getTotalPriceOfItems(itemsWithInfo []models.CartItemWithInfo) uint32 {
+	var totalPrice uint32 = 0
 	for _, itemWithInfo := range itemsWithInfo {
 		totalPrice += itemWithInfo.Price * uint32(itemWithInfo.Count)
 	}
-
-	return itemsWithInfo, totalPrice, nil
+	return totalPrice
 }
 
 func (c *cart) getProductsFullInfo(ctx context.Context, items []models.CartItem) ([]models.CartItemWithInfo, error) {
@@ -237,6 +268,11 @@ func (c *cart) DeleteItemsByUserId(ctx context.Context, userId int64) error {
 	err := c.cartProvider.DeleteItemsByUserId(ctx, userId)
 	if err != nil {
 		return fmt.Errorf("error clearing cart from storage: %w", err)
+	}
+
+	err = c.cache.Invalidate(ctx, userId)
+	if err != nil {
+		log.Error().Err(err).Int64("user", userId).Msg("cannot invalidate cache of user cart")
 	}
 
 	return nil

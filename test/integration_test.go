@@ -26,7 +26,7 @@ func TestCart(t *testing.T) {
 	cartClient, err := NewCartGrpcClient(ctx, wg, "localhost:8083")
 	require.NoError(t, err)
 
-	for {
+	for i := 0; i < 10; i++ {
 
 		userId := rand.Int63()
 		var sku uint32 = 1148162
