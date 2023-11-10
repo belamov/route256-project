@@ -138,6 +138,9 @@ func (c *cart) GetItemsByUserId(ctx context.Context, userId int64) ([]models.Car
 	if err == nil && itemsFromCache != nil {
 		return itemsFromCache, c.getTotalPriceOfItems(itemsFromCache), nil
 	}
+	if err != nil {
+		log.Error().Err(err).Msg("error getting cart items from cache")
+	}
 
 	items, err := c.cartProvider.GetItemsByUserId(ctx, userId)
 	if err != nil {
