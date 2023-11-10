@@ -48,6 +48,27 @@ func TestCart(t *testing.T) {
 		assert.Equal(t, sku, response.Items[0].Sku)
 		assert.Equal(t, uint64(1), response.Items[0].Count)
 
+		response, err = cartClient.List(ctx, &pb.ListRequest{User: userId})
+		assert.NoError(t, err)
+		assert.Len(t, response.Items, 1)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, uint64(1), response.Items[0].Count)
+
+		response, err = cartClient.List(ctx, &pb.ListRequest{User: userId})
+		assert.NoError(t, err)
+		assert.Len(t, response.Items, 1)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, uint64(1), response.Items[0].Count)
+
+		response, err = cartClient.List(ctx, &pb.ListRequest{User: userId})
+		assert.NoError(t, err)
+		assert.Len(t, response.Items, 1)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, uint64(1), response.Items[0].Count)
+
 		_, err = cartClient.DeleteItem(ctx, &pb.DeleteItemRequest{
 			User: userId,
 			Sku:  sku,

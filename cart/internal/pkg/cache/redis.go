@@ -5,8 +5,11 @@ import (
 	"errors"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/go-redis/cache/v9"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
 	"route256/cart/internal/app/models"
@@ -27,7 +30,8 @@ func NewRedis(ctx context.Context, wg *sync.WaitGroup, shards []string) *Redis {
 	})
 
 	mycache := cache.New(&cache.Options{
-		Redis: ring,
+		Redis:        ring,
+		StatsEnabled: true,
 	})
 
 	go func() {
@@ -40,6 +44,41 @@ func NewRedis(ctx context.Context, wg *sync.WaitGroup, shards []string) *Redis {
 	}()
 
 	return &Redis{cache: mycache}
+}
+
+func (r Redis) StartMonitorHitMiss(ctx context.Context, registerer prometheus.Registerer) {
+	latestHits := r.cache.Stats().Hits
+	latestMisses := r.cache.Stats().Misses
+
+	go func() {
+		cacheHits := promauto.With(registerer).NewCounter(prometheus.CounterOpts{
+			Name: "cart_list_cache_hits",
+			Help: "The total number of cart list hits",
+		})
+		cacheMisses := promauto.With(registerer).NewCounter(prometheus.CounterOpts{
+			Name: "cart_list_cache_misses",
+			Help: "The total number of cart list misses",
+		})
+
+		ticker := time.NewTicker(time.Second)
+
+		for {
+			select {
+			case <-ctx.Done():
+				ticker.Stop()
+				return
+			case <-ticker.C:
+				currentHits := r.cache.Stats().Hits
+				currentMisses := r.cache.Stats().Misses
+
+				cacheHits.Add(float64(currentHits - latestHits))
+				cacheMisses.Add(float64(currentMisses - latestMisses))
+
+				latestHits = currentHits
+				latestMisses = currentMisses
+			}
+		}
+	}()
 }
 
 func (r Redis) GetCartItems(ctx context.Context, userId int64) ([]models.CartItemWithInfo, error) {

@@ -77,6 +77,7 @@ func main() {
 
 	wg.Add(1)
 	redisCache := cache.NewRedis(ctx, wg, config.RedisShards)
+	redisCache.StartMonitorHitMiss(ctx, m.Reg)
 
 	cartService := services.NewCartService(productService, lomsService, cartProvider, redisCache, t)
 
