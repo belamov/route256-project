@@ -26,7 +26,7 @@ func TestCart(t *testing.T) {
 	cartClient, err := NewCartGrpcClient(ctx, wg, "localhost:8083")
 	require.NoError(t, err)
 
-	for {
+	for i := 0; i < 10; i++ {
 
 		userId := rand.Int63()
 		var sku uint32 = 1148162
@@ -42,6 +42,27 @@ func TestCart(t *testing.T) {
 		assert.NoError(t, err)
 
 		response, err := cartClient.List(ctx, &pb.ListRequest{User: userId})
+		assert.NoError(t, err)
+		assert.Len(t, response.Items, 1)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, uint64(1), response.Items[0].Count)
+
+		response, err = cartClient.List(ctx, &pb.ListRequest{User: userId})
+		assert.NoError(t, err)
+		assert.Len(t, response.Items, 1)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, uint64(1), response.Items[0].Count)
+
+		response, err = cartClient.List(ctx, &pb.ListRequest{User: userId})
+		assert.NoError(t, err)
+		assert.Len(t, response.Items, 1)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, sku, response.Items[0].Sku)
+		assert.Equal(t, uint64(1), response.Items[0].Count)
+
+		response, err = cartClient.List(ctx, &pb.ListRequest{User: userId})
 		assert.NoError(t, err)
 		assert.Len(t, response.Items, 1)
 		assert.Equal(t, sku, response.Items[0].Sku)

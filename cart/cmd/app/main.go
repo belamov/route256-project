@@ -7,6 +7,8 @@ import (
 	"sync"
 	"syscall"
 
+	"route256/cart/internal/pkg/cache"
+
 	"route256/cart/internal/pkg/metrics"
 
 	"route256/cart/internal/pkg/tracer"
@@ -73,7 +75,11 @@ func main() {
 
 	cartProvider := repositories.NewCartRepository(dbPool)
 
-	cartService := services.NewCartService(productService, lomsService, cartProvider, t)
+	wg.Add(1)
+	redisCache := cache.NewRedis(ctx, wg, config.RedisShards)
+	redisCache.StartMonitorHitMiss(ctx, m.Reg)
+
+	cartService := services.NewCartService(productService, lomsService, cartProvider, redisCache, t)
 
 	httpServer := httpserver.NewHTTPServer(config.HttpServerAddress, handlers.NewRouter(cartService))
 	grpcServer := grpcserver.NewGRPCServer(config.GrpcServerAddress, config.GrpcGatewayServerAddress, cartService, m)

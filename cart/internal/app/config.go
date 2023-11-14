@@ -23,6 +23,7 @@ type Config struct {
 	RedisAddress              string        `default:"redis:6379" split_words:"true"`
 	LogLevel                  zerolog.Level `default:"3" split_words:"true"`
 	MetricsServerAddress      string        `default:"0.0.0.0:8081" split_words:"true"`
+	RedisShards               []string      `default:"localhost:6381,localhost:6380" split_words:"true"`
 }
 
 func BuildConfig() *Config {

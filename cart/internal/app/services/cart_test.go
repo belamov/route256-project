@@ -50,7 +50,7 @@ func (ts *CartTestSuite) SetupSuite() {
 	ts.mockLomsService = NewMockLomsService(ts.mockCtrl)
 	ts.mockProductService = NewMockProductService(ts.mockCtrl)
 	tracer := trace.NewNoopTracerProvider().Tracer("mock")
-	ts.cart = NewCartService(ts.mockProductService, ts.mockLomsService, ts.mockCartProvider, tracer)
+	ts.cart = NewCartService(ts.mockProductService, ts.mockLomsService, ts.mockCartProvider, NoopCache{}, tracer)
 }
 
 func TestCartTestSuite(t *testing.T) {
@@ -302,7 +302,7 @@ func BenchmarkCart_GetItemsByUserId(b *testing.B) {
 	var userId int64 = 50
 
 	// чтобы не делать настоящих запросов, замокаем продукт сервис с обычным слипом в 10мс, как будто бы мы получаем ответ за 10мс
-	service := NewCartService(mockProductService{}, mockLomsService, mockCartStorage, nil)
+	service := NewCartService(mockProductService{}, mockLomsService, mockCartStorage, NoopCache{}, nil)
 
 	cartWith1item := make([]models.CartItem, 1)
 	for j := 0; j < len(cartWith1item); j++ {
@@ -313,7 +313,7 @@ func BenchmarkCart_GetItemsByUserId(b *testing.B) {
 		}
 	}
 
-	b.Run(fmt.Sprintf("Get Cart List With %d items", len(cartWith1item)), func(b *testing.B) {
+	b.Run(fmt.Sprintf("GetCartItems Cart List With %d items", len(cartWith1item)), func(b *testing.B) {
 		mockCartStorage.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartWith1item, nil).Times(b.N)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
@@ -333,7 +333,7 @@ func BenchmarkCart_GetItemsByUserId(b *testing.B) {
 		}
 	}
 
-	b.Run(fmt.Sprintf("Get Cart List With %d items", len(cartWith2items)), func(b *testing.B) {
+	b.Run(fmt.Sprintf("GetCartItems Cart List With %d items", len(cartWith2items)), func(b *testing.B) {
 		mockCartStorage.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartWith2items, nil).Times(b.N)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
@@ -353,7 +353,7 @@ func BenchmarkCart_GetItemsByUserId(b *testing.B) {
 		}
 	}
 
-	b.Run(fmt.Sprintf("Get Cart List With %d items", len(cartWith5items)), func(b *testing.B) {
+	b.Run(fmt.Sprintf("GetCartItems Cart List With %d items", len(cartWith5items)), func(b *testing.B) {
 		mockCartStorage.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartWith5items, nil).Times(b.N)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
@@ -373,7 +373,7 @@ func BenchmarkCart_GetItemsByUserId(b *testing.B) {
 		}
 	}
 
-	b.Run(fmt.Sprintf("Get Cart List With %d items", len(cartWith10items)), func(b *testing.B) {
+	b.Run(fmt.Sprintf("GetCartItems Cart List With %d items", len(cartWith10items)), func(b *testing.B) {
 		mockCartStorage.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartWith10items, nil).Times(b.N)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
@@ -393,7 +393,7 @@ func BenchmarkCart_GetItemsByUserId(b *testing.B) {
 		}
 	}
 
-	b.Run(fmt.Sprintf("Get Cart List With %d items", len(cartWith20items)), func(b *testing.B) {
+	b.Run(fmt.Sprintf("GetCartItems Cart List With %d items", len(cartWith20items)), func(b *testing.B) {
 		mockCartStorage.EXPECT().GetItemsByUserId(gomock.Any(), userId).Return(cartWith20items, nil).Times(b.N)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
